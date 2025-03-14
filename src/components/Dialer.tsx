@@ -7,7 +7,6 @@ import {
   IconButton,
   useMediaQuery,
   useTheme,
-  Input,
 } from "@mui/material";
 import { Backspace, Phone, X } from "@phosphor-icons/react";
 

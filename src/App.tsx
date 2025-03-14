@@ -1,4 +1,3 @@
-import React from "react";
 import { Box, createTheme, CssBaseline, ThemeProvider } from "@mui/material";
 import Page from "./Page";
 

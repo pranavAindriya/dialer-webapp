@@ -13,13 +13,13 @@ interface Call {
   timestamp: number;
 }
 
-interface Contact {
-  id: number;
-  name: string;
-  number: string;
-  status?: "Outgoing" | "Missed" | "Not Picked";
-  timestamp?: Date | number;
-}
+// interface Contact {
+//   id: number;
+//   name: string;
+//   number: string;
+//   status?: "Outgoing" | "Missed" | "Not Picked";
+//   timestamp?: Date | number;
+// }
 
 const Page: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
@@ -48,7 +48,7 @@ const Page: React.FC = () => {
     },
   ]);
 
-  const [contacts, setContacts] = useState<Contact[]>([
+  const contacts = [
     { id: 1, name: "Amisha", number: "+917622365663" },
     { id: 2, name: "Bunty", number: "+917622365663" },
     { id: 3, name: "Brijesh Tiwari", number: "+917622365663" },
@@ -58,7 +58,7 @@ const Page: React.FC = () => {
     { id: 7, name: "Chirag Paswan", number: "+917622654613" },
     { id: 8, name: "Chirag Paswan 2", number: "+917622365663" },
     { id: 9, name: "Chirag Reddy", number: "+917622365663" },
-  ]);
+  ];
 
   const theme = useTheme();
 

@@ -137,7 +137,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
 
       const config = {
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       };

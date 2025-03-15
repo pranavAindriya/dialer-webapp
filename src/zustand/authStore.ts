@@ -29,12 +29,18 @@ export const useAuthStore = create<AuthState>()(
       login: async (username, password) => {
         set({ isLoading: true, error: null });
         try {
+          const headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+          };
+
+          const formData = new URLSearchParams();
+          formData.append("username", username);
+          formData.append("password", password);
+
           const response = await axios.post(
             `${import.meta.env.VITE_BASE_URL}/api/clicktocall/AuthToken`,
-            {
-              username,
-              password,
-            }
+            formData,
+            { headers }
           );
 
           set({

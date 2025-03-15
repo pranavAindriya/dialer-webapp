@@ -15,7 +15,7 @@ import {
 import { Backspace, Phone, X } from "@phosphor-icons/react";
 import { useAuthStore } from "../zustand/authStore";
 import { callPartyStore } from "../zustand/callPartyStore";
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
 
 const style = {
   position: "absolute",
@@ -142,11 +142,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
         },
       };
 
-      const response: AxiosResponse<ApiResponse> = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/api/clicktocall/initiate-call`,
-        payload,
-        config
-      );
+      const response = await axios.post("/api/initiate-call", payload, config);
 
       setApiResponse(response.data);
       setResponseModalOpen(true);

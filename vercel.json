@@ -1,8 +1,14 @@
 {
-  "rewrites": [
+  "functions": {
+    "api/*.js": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
+  "routes": [
     {
-      "source": "/api/:path*",
-      "destination": "https://ct/Cpaas/api/:path*"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     }
   ]
 }

@@ -1,4 +1,9 @@
-import { Box, createTheme, CssBaseline, ThemeProvider } from "@mui/material";
+import {
+  Container,
+  createTheme,
+  CssBaseline,
+  ThemeProvider,
+} from "@mui/material";
 import Page from "./Page";
 
 const App = () => {
@@ -23,9 +28,13 @@ const App = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ height: "100dvh" }}>
+      <Container
+        maxWidth={"lg"}
+        disableGutters
+        sx={{ height: "100dvh", backgroundColor: "#f5f5f5" }}
+      >
         <Page />
-      </Box>
+      </Container>
     </ThemeProvider>
   );
 };

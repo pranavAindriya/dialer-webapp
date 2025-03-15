@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -7,20 +7,93 @@ import {
   IconButton,
   useMediaQuery,
   useTheme,
+  Modal,
+  TextField,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import { Backspace, Phone, X } from "@phosphor-icons/react";
+import { useAuthStore } from "../zustand/authStore";
+import { callPartyStore } from "../zustand/callPartyStore";
+import axios, { AxiosResponse } from "axios";
+
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 400,
+  bgcolor: "background.paper",
+  boxShadow: 24,
+  p: 4,
+  borderRadius: 5,
+};
+
+const responseModalStyle = {
+  ...style,
+  width: { xs: "90%", md: 500 },
+  maxHeight: "80vh",
+  overflow: "auto",
+};
 
 interface DialerProps {
   onDial: (number: string) => void;
   onClose: () => void;
 }
 
+interface ApiResponse {
+  status: number;
+  message: {
+    RespId: number;
+    Response: string;
+    ReqId: number;
+    callid: number;
+  };
+  requestid: string;
+}
+
 const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
   const [inputNumber, setInputNumber] = useState("");
+  const [open, setOpen] = React.useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
+  // New states for API call and response modal
+  const [isCallLoading, setIsCallLoading] = useState(false);
+  const [apiResponse, setApiResponse] = useState<ApiResponse | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [responseModalOpen, setResponseModalOpen] = useState(false);
+
+  // Get auth state from zustand
+  const { isAuthenticated, isLoading, error, login, user, logout, token } =
+    useAuthStore();
+
+  const {
+    apartyno,
+    bpartyno,
+    cli,
+    reference_id,
+    dtmfflag,
+    recordingflag,
+    setApartyNo,
+    setBpartyNo,
+  } = callPartyStore();
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!open) {
+      setUsername("");
+      setPassword("");
+    }
+  }, [open]);
+
   const handleNumberClick = (num: string) => {
+    if (apartyno && bpartyno) {
+      setApartyNo(null);
+      setBpartyNo(null);
+    }
     setInputNumber((prev) => prev + num);
   };
 
@@ -34,6 +107,67 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
       setInputNumber("");
     }
   };
+
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
+  const handleResponseModalClose = () => {
+    setResponseModalOpen(false);
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await login(username, password);
+  };
+
+  // Function to handle the call initiation
+  const handleInitiateCall = async () => {
+    try {
+      setIsCallLoading(true);
+      setApiError(null);
+
+      const payload = {
+        cli: cli || "9610012318",
+        apartyno: apartyno || "",
+        bpartyno: bpartyno || "",
+        reference_id: reference_id || "1212",
+        dtmfflag: dtmfflag || 1,
+        recordingflag: recordingflag || 0,
+      };
+
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      };
+
+      const response: AxiosResponse<ApiResponse> = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/clicktocall/initiate-call`,
+        payload,
+        config
+      );
+
+      setApiResponse(response.data);
+      setResponseModalOpen(true);
+    } catch (err) {
+      console.error("Error initiating call:", err);
+      setApiError(
+        err instanceof Error ? err.message : "Unknown error occurred"
+      );
+      setResponseModalOpen(true);
+    } finally {
+      setIsCallLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated && open) {
+      handleClose();
+    }
+  }, [isAuthenticated, open]);
+
+  console.log(user);
 
   const dialButtons = [
     ["1", "2", "3"],
@@ -73,9 +207,25 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
           <X />
         </IconButton>
       )}
-      <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>
-        Dialer
-      </Typography>
+      <Box
+        display={"flex"}
+        justifyContent={"space-between"}
+        alignItems={"center"}
+      >
+        <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+          Dialer
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          sx={{ color: "white" }}
+          onClick={!isAuthenticated ? handleOpen : logout}
+        >
+          <Typography variant="subtitle2">
+            {isAuthenticated ? "Logout" : "Login"}
+          </Typography>
+        </Button>
+      </Box>
 
       <Box
         sx={{
@@ -87,6 +237,48 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
           minHeight: "80px",
         }}
       >
+        <Box
+          display={"flex"}
+          justifyContent={"space-between"}
+          alignItems={"center"}
+          gap={2}
+        >
+          {!inputNumber && (
+            <Typography>
+              {apartyno && `Aparty Number : ${apartyno}`}
+              <br />
+              {bpartyno && `Bparty Number : ${bpartyno}`}
+            </Typography>
+          )}
+          {!inputNumber && (apartyno || bpartyno) && (
+            <Box display={"flex"} flexDirection={"column"}>
+              <Button
+                size="small"
+                variant="contained"
+                color="success"
+                onClick={handleInitiateCall}
+                disabled={
+                  isCallLoading || !apartyno || !bpartyno || !isAuthenticated
+                }
+              >
+                {isCallLoading ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  "Initiate Call"
+                )}
+              </Button>
+              <Button
+                color="error"
+                size="small"
+                onClick={() => {
+                  callPartyStore.setState({ apartyno: "", bpartyno: "" });
+                }}
+              >
+                Reset
+              </Button>
+            </Box>
+          )}
+        </Box>
         <Typography variant="h4" sx={{ fontWeight: "medium" }}>
           {inputNumber}
         </Typography>
@@ -139,6 +331,114 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
           <Phone size={20} />
         </IconButton>
       </Box>
+
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="login-modal-title"
+        aria-describedby="login-modal-description"
+      >
+        <Box sx={style}>
+          <Typography
+            id="login-modal-title"
+            variant="h5"
+            component="h2"
+            mb={2}
+            textAlign={"center"}
+          >
+            Login To Make Calls
+          </Typography>
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          <Box component="form" onSubmit={handleLogin} sx={{ mt: 1 }}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="username"
+              label="Username"
+              name="username"
+              autoComplete="username"
+              autoFocus
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={isLoading}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
+            />
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2, color: "white" }}
+              disabled={isLoading}
+            >
+              {isLoading ? <CircularProgress size={24} /> : "Login"}
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+
+      <Modal
+        open={responseModalOpen}
+        onClose={handleResponseModalClose}
+        aria-labelledby="response-modal-title"
+      >
+        <Box sx={responseModalStyle}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={2}
+          >
+            <Typography id="response-modal-title" variant="h6" component="h2">
+              API Response
+            </Typography>
+            <IconButton onClick={handleResponseModalClose}>
+              <X />
+            </IconButton>
+          </Box>
+
+          {apiError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {apiError}
+            </Alert>
+          )}
+
+          {apiResponse && (
+            <Box
+              sx={{
+                bgcolor: "#f5f5f5",
+                p: 2,
+                borderRadius: 1,
+                fontFamily: "monospace",
+                whiteSpace: "pre-wrap",
+                overflowX: "auto",
+              }}
+            >
+              <pre style={{ margin: 0 }}>
+                {JSON.stringify(apiResponse, null, 2)}
+              </pre>
+            </Box>
+          )}
+        </Box>
+      </Modal>
     </Box>
   );
 };

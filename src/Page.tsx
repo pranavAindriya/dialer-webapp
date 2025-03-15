@@ -49,15 +49,14 @@ const Page: React.FC = () => {
   ]);
 
   const contacts = [
-    { id: 1, name: "Amisha", number: "+917622365663" },
-    { id: 2, name: "Bunty", number: "+917622365663" },
-    { id: 3, name: "Brijesh Tiwari", number: "+917622365663" },
-    { id: 4, name: "Chotulal Chaudhary", number: "+917622365663" },
-    { id: 5, name: "Chandrika Chaatala", number: "+917622365663" },
-    { id: 6, name: "Chirag Bansal", number: "+917622365663" },
-    { id: 7, name: "Chirag Paswan", number: "+917622654613" },
-    { id: 8, name: "Chirag Paswan 2", number: "+917622365663" },
-    { id: 9, name: "Chirag Reddy", number: "+917622365663" },
+    { id: 1, name: "Anoob", number: "9846940888" },
+    { id: 2, name: "Pranav", number: "9072544016" },
+    { id: 3, name: "Dheeraj", number: "9544321056" },
+    { id: 4, name: "Munees", number: "9747256118" },
+    { id: 5, name: "Jamshad", number: "9745561871" },
+    { id: 6, name: "Anshid", number: "7736274558" },
+    { id: 7, name: "Yaseen", number: "8921590995" },
+    { id: 8, name: "Joyel", number: "7994095038" },
   ];
 
   const theme = useTheme();

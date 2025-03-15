@@ -102,7 +102,7 @@ const RecentCalls: React.FC<RecentCallsProps> = ({
           Object.entries(callsByDate)
             .sort(
               ([dateA], [dateB]) =>
-                (new Date(dateB) as any) - (new Date(dateA) as any)
+                new Date(dateB).getTime() - new Date(dateA).getTime()
             )
             .map(([dateStr, calls]) => (
               <Box key={dateStr}>

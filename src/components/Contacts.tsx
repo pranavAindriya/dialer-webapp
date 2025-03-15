@@ -12,8 +12,11 @@ import {
   Divider,
   InputBase,
   Paper,
+  Button,
 } from "@mui/material";
 import { MagnifyingGlass, Phone } from "@phosphor-icons/react";
+import { callPartyStore } from "../zustand/callPartyStore";
+import { useAuthStore } from "../zustand/authStore";
 
 interface Contact {
   id: number;
@@ -27,6 +30,10 @@ interface ContactsProps {
 
 const Contacts: React.FC<ContactsProps> = ({ contacts }) => {
   const [searchQuery, setSearchQuery] = useState("");
+
+  const { setApartyNo, setBpartyNo, apartyno, bpartyno } = callPartyStore();
+
+  const { isAuthenticated } = useAuthStore();
 
   const filteredContacts = contacts.filter(
     (contact) =>
@@ -102,6 +109,38 @@ const Contacts: React.FC<ContactsProps> = ({ contacts }) => {
                           secondary={contact.number}
                         />
                         <ListItemSecondaryAction>
+                          {!isAuthenticated && (
+                            <Typography
+                              color="primary"
+                              fontSize={10}
+                              display={"inline"}
+                              sx={{
+                                cursor: "pointer",
+                                mr: 1,
+                              }}
+                            >
+                              Login To add as Party
+                            </Typography>
+                          )}
+                          {!apartyno && isAuthenticated && (
+                            <Button
+                              variant="text"
+                              size="small"
+                              onClick={() => setApartyNo(contact.number)}
+                            >
+                              Set as Aparty
+                            </Button>
+                          )}
+                          {!bpartyno && isAuthenticated && (
+                            <Button
+                              color="info"
+                              variant="text"
+                              size="small"
+                              onClick={() => setBpartyNo(contact.number)}
+                            >
+                              Set as Bparty
+                            </Button>
+                          )}
                           <IconButton edge="end">
                             <Phone />
                           </IconButton>

@@ -11,8 +11,9 @@ import {
   TextField,
   Alert,
   CircularProgress,
+  Tooltip,
 } from "@mui/material";
-import { Backspace, Phone, X } from "@phosphor-icons/react";
+import { Backspace, Phone, X, Trash } from "@phosphor-icons/react";
 import { useAuthStore } from "../zustand/authStore";
 import { callPartyStore } from "../zustand/callPartyStore";
 import axios from "axios";
@@ -67,7 +68,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
   const [responseModalOpen, setResponseModalOpen] = useState(false);
 
   // Get auth state from zustand
-  const { isAuthenticated, isLoading, error, login, user, logout, token } =
+  const { isAuthenticated, isLoading, error, login, logout, token } =
     useAuthStore();
 
   const {
@@ -102,10 +103,22 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
   };
 
   const handleDial = () => {
-    if (inputNumber.length > 3) {
+    if (!isAuthenticated) {
+      handleOpen();
+      return;
+    }
+
+    if (apartyno && bpartyno) {
+      handleInitiateCall();
+    } else if (inputNumber.length > 0) {
       onDial(inputNumber);
       setInputNumber("");
     }
+  };
+
+  const handleReset = () => {
+    callPartyStore.setState({ apartyno: "", bpartyno: "" });
+    setInputNumber("");
   };
 
   const handleOpen = () => setOpen(true);
@@ -163,8 +176,6 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
     }
   }, [isAuthenticated, open]);
 
-  console.log(user);
-
   const dialButtons = [
     ["1", "2", "3"],
     ["4", "5", "6"],
@@ -198,11 +209,9 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
         borderRight: !isMobile ? `1px solid ${theme.palette.divider}` : "none",
       }}
     >
-      {isMobile && (
-        <IconButton onClick={onClose} sx={{ alignSelf: "flex-end" }}>
-          <X />
-        </IconButton>
-      )}
+      <IconButton onClick={onClose} sx={{ alignSelf: "flex-end" }}>
+        <X />
+      </IconButton>
       <Box
         display={"flex"}
         justifyContent={"space-between"}
@@ -231,50 +240,10 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
           my: 3,
           position: "relative",
           minHeight: "80px",
+          flexDirection: "column",
         }}
       >
-        <Box
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          gap={2}
-        >
-          {!inputNumber && (
-            <Typography>
-              {apartyno && `Aparty Number : ${apartyno}`}
-              <br />
-              {bpartyno && `Bparty Number : ${bpartyno}`}
-            </Typography>
-          )}
-          {!inputNumber && (apartyno || bpartyno) && (
-            <Box display={"flex"} flexDirection={"column"}>
-              <Button
-                size="small"
-                variant="contained"
-                color="success"
-                onClick={handleInitiateCall}
-                disabled={
-                  isCallLoading || !apartyno || !bpartyno || !isAuthenticated
-                }
-              >
-                {isCallLoading ? (
-                  <CircularProgress size={20} />
-                ) : (
-                  "Initiate Call"
-                )}
-              </Button>
-              <Button
-                color="error"
-                size="small"
-                onClick={() => {
-                  callPartyStore.setState({ apartyno: "", bpartyno: "" });
-                }}
-              >
-                Reset
-              </Button>
-            </Box>
-          )}
-        </Box>
+        {/* Current number input display */}
         <Typography variant="h4" sx={{ fontWeight: "medium" }}>
           {inputNumber}
         </Typography>
@@ -285,6 +254,42 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
           >
             <Backspace />
           </IconButton>
+        )}
+
+        {/* Show party numbers if inputNumber is empty */}
+        {!inputNumber && (
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              width: "100%",
+              mt: 1,
+            }}
+          >
+            {apartyno && (
+              <Typography variant="body1" sx={{ textAlign: "center" }}>
+                Aparty Number: {apartyno}
+              </Typography>
+            )}
+            {bpartyno && (
+              <Typography variant="body1" sx={{ textAlign: "center" }}>
+                Bparty Number: {bpartyno}
+              </Typography>
+            )}
+            {(apartyno || bpartyno) && (
+              <Tooltip title="Clear numbers">
+                <IconButton
+                  color="error"
+                  size="small"
+                  onClick={handleReset}
+                  sx={{ mt: 1 }}
+                >
+                  <Trash size={20} />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
         )}
       </Box>
 
@@ -314,18 +319,27 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
       </Grid>
 
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4, pb: 2 }}>
-        <IconButton
-          color="primary"
-          sx={{
-            bgcolor: "#4caf50",
-            color: "white",
-            p: 3,
-            "&:hover": { bgcolor: "#388e3c" },
-          }}
-          onClick={handleDial}
-        >
-          <Phone size={20} />
-        </IconButton>
+        <Tooltip title={apartyno && bpartyno ? "Initiate Call" : "Dial Number"}>
+          <IconButton
+            color="primary"
+            sx={{
+              bgcolor: isCallLoading ? "#388e3c" : "#4caf50",
+              color: "white",
+              p: 3,
+              "&:hover": { bgcolor: "#388e3c" },
+            }}
+            onClick={handleDial}
+            disableRipple={
+              isCallLoading || (!inputNumber && (!apartyno || !bpartyno))
+            }
+          >
+            {isCallLoading ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              <Phone size={20} />
+            )}
+          </IconButton>
+        </Tooltip>
       </Box>
 
       <Modal

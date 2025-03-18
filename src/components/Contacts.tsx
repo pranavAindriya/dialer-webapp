@@ -13,6 +13,8 @@ import {
   InputBase,
   Paper,
   Button,
+  Fab,
+  Chip,
 } from "@mui/material";
 import { MagnifyingGlass, Phone } from "@phosphor-icons/react";
 import { callPartyStore } from "../zustand/callPartyStore";
@@ -26,9 +28,15 @@ interface Contact {
 
 interface ContactsProps {
   contacts: Contact[];
+  onDialClick: () => void;
+  dialerStatus: boolean;
 }
 
-const Contacts: React.FC<ContactsProps> = ({ contacts }) => {
+const Contacts: React.FC<ContactsProps> = ({
+  contacts,
+  onDialClick,
+  dialerStatus,
+}) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { setApartyNo, setBpartyNo, apartyno, bpartyno } = callPartyStore();
@@ -52,6 +60,13 @@ const Contacts: React.FC<ContactsProps> = ({ contacts }) => {
   };
 
   const contactGroups = groupByFirstLetter();
+
+  // Function to check if contact is selected as A-party or B-party
+  const getContactRole = (contactNumber: string) => {
+    if (contactNumber === apartyno) return "A-party";
+    if (contactNumber === bpartyno) return "B-party";
+    return null;
+  };
 
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -98,62 +113,135 @@ const Contacts: React.FC<ContactsProps> = ({ contacts }) => {
                   {letter}
                 </Typography>
                 <List dense>
-                  {group.map((contact, index) => (
-                    <React.Fragment key={contact.id}>
-                      <ListItem>
-                        <ListItemAvatar>
-                          <Avatar>{contact.name[0].toUpperCase()}</Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={contact.name}
-                          secondary={contact.number}
-                        />
-                        <ListItemSecondaryAction>
-                          {!isAuthenticated && (
-                            <Typography
-                              color="primary"
-                              fontSize={10}
-                              display={"inline"}
+                  {group.map((contact, index) => {
+                    const contactRole = getContactRole(contact.number);
+                    return (
+                      <React.Fragment key={contact.id}>
+                        <ListItem
+                          sx={{
+                            bgcolor: contactRole
+                              ? "action.hover"
+                              : "transparent",
+                          }}
+                        >
+                          <ListItemAvatar>
+                            <Avatar
                               sx={{
-                                cursor: "pointer",
-                                mr: 1,
+                                bgcolor:
+                                  contactRole === "A-party"
+                                    ? "primary.main"
+                                    : contactRole === "B-party"
+                                    ? "info.main"
+                                    : undefined,
                               }}
                             >
-                              Login To add as Party
-                            </Typography>
-                          )}
-                          {!apartyno && isAuthenticated && (
-                            <Button
-                              variant="text"
-                              size="small"
-                              onClick={() => setApartyNo(contact.number)}
-                            >
-                              Set as Aparty
-                            </Button>
-                          )}
-                          {!bpartyno && isAuthenticated && (
-                            <Button
-                              color="info"
-                              variant="text"
-                              size="small"
-                              onClick={() => setBpartyNo(contact.number)}
-                            >
-                              Set as Bparty
-                            </Button>
-                          )}
-                          <IconButton edge="end">
-                            <Phone />
-                          </IconButton>
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                      {index < group.length - 1 && <Divider variant="inset" />}
-                    </React.Fragment>
-                  ))}
+                              {contact.name[0].toUpperCase()}
+                            </Avatar>
+                          </ListItemAvatar>
+                          <ListItemText
+                            primary={
+                              <Box display="flex" alignItems="center" gap={1}>
+                                <Typography>{contact.name}</Typography>
+                                {contactRole && (
+                                  <Chip
+                                    label={contactRole}
+                                    size="small"
+                                    color={
+                                      contactRole === "A-party"
+                                        ? "primary"
+                                        : "info"
+                                    }
+                                    sx={{
+                                      height: 18,
+                                      color: "white",
+                                      fontSize: 10,
+                                      paddingTop: "2px",
+                                    }}
+                                  />
+                                )}
+                              </Box>
+                            }
+                            secondary={contact.number}
+                          />
+                          <ListItemSecondaryAction>
+                            {!isAuthenticated && (
+                              <Typography
+                                color="primary"
+                                fontSize={10}
+                                display={"inline"}
+                                sx={{
+                                  cursor: "pointer",
+                                  mr: 1,
+                                }}
+                              >
+                                Login To add as Party
+                              </Typography>
+                            )}
+                            {!apartyno && isAuthenticated && !contactRole && (
+                              <Button
+                                variant="text"
+                                size="small"
+                                onClick={() => setApartyNo(contact.number)}
+                              >
+                                Set as Aparty
+                              </Button>
+                            )}
+                            {!bpartyno && isAuthenticated && !contactRole && (
+                              <Button
+                                color="info"
+                                variant="text"
+                                size="small"
+                                onClick={() => setBpartyNo(contact.number)}
+                              >
+                                Set as Bparty
+                              </Button>
+                            )}
+                            {contactRole && isAuthenticated && (
+                              <Button
+                                color="error"
+                                variant="text"
+                                size="small"
+                                onClick={() => {
+                                  if (contactRole === "A-party") {
+                                    setApartyNo("");
+                                  } else {
+                                    setBpartyNo("");
+                                  }
+                                }}
+                              >
+                                Remove
+                              </Button>
+                            )}
+                            <IconButton edge="end">
+                              <Phone />
+                            </IconButton>
+                          </ListItemSecondaryAction>
+                        </ListItem>
+                        {index < group.length - 1 && (
+                          <Divider variant="inset" />
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </List>
               </Box>
             ))
         )}
       </Box>
+      <Fab
+        color="primary"
+        onClick={onDialClick}
+        sx={{
+          position: "absolute",
+          bottom: 73,
+          right: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          display: dialerStatus ? "none" : "block",
+        }}
+      >
+        <Phone color="white" style={{ marginTop: "6px" }} size={18} />
+      </Fab>
     </Box>
   );
 };

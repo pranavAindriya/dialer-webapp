@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Grid, Paper, Tab, Tabs, useTheme } from "@mui/material";
+import { Box, Paper, Tab, Tabs } from "@mui/material";
 import { AddressBook, ClockCounterClockwise } from "@phosphor-icons/react";
 import Dialer from "./components/Dialer";
 import RecentCalls from "./components/RecentCalls";
@@ -59,8 +59,6 @@ const Page: React.FC = () => {
     { id: 8, name: "Joyel", number: "7994095038" },
   ];
 
-  const theme = useTheme();
-
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
     setShowDialer(false);
@@ -80,12 +78,10 @@ const Page: React.FC = () => {
     setShowDialer(false);
   };
 
-  const isMobile = theme.breakpoints.down("md");
-
   return (
     <Box sx={{ height: "100dvh", display: "flex", flexDirection: "column" }}>
-      <Grid container sx={{ flexGrow: 1, position: "relative" }}>
-        <Grid
+      <Box sx={{ flexGrow: 1, position: "relative", bgcolor: "white" }}>
+        {/* <Grid
           item
           xs={0}
           md={6}
@@ -93,14 +89,10 @@ const Page: React.FC = () => {
           sx={{ display: { xs: "none", md: "block" } }}
         >
           <Dialer onDial={handleDial} onClose={() => setShowDialer(false)} />
-        </Grid>
-        <Grid
-          item
-          xs={12}
-          md={6}
-          lg={7}
+        </Grid> */}
+        <Box
           sx={{ display: "flex", flexDirection: "column" }}
-          maxHeight={"100dvh"}
+          height={"100dvh"}
         >
           <Box
             sx={{
@@ -120,7 +112,13 @@ const Page: React.FC = () => {
                 dialerStatus={showDialer}
               />
             )}
-            {tabValue === 1 && <Contacts contacts={contacts} />}
+            {tabValue === 1 && (
+              <Contacts
+                contacts={contacts}
+                onDialClick={() => setShowDialer(true)}
+                dialerStatus={showDialer}
+              />
+            )}
           </Box>
           <Paper sx={{ borderRadius: 0 }}>
             <Tabs
@@ -145,26 +143,24 @@ const Page: React.FC = () => {
               />
             </Tabs>
           </Paper>
-        </Grid>
-        {isMobile && (
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: showDialer ? "100%" : 0,
-              transform: `translateY(${showDialer ? 0 : "100%"})`,
-              transition: "transform 0.3s ease-in-out",
-              bgcolor: "background.paper",
-              zIndex: 1000,
-              md: { position: "static", height: "100%", transform: "none" },
-            }}
-          >
-            <Dialer onDial={handleDial} onClose={() => setShowDialer(false)} />
-          </Box>
-        )}
-      </Grid>
+        </Box>
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: showDialer ? "100%" : 0,
+            transform: `translateY(${showDialer ? 0 : "100%"})`,
+            transition: "transform 0.3s ease-in-out",
+            bgcolor: "background.paper",
+            zIndex: 1000,
+            md: { position: "static", height: "100%", transform: "none" },
+          }}
+        >
+          <Dialer onDial={handleDial} onClose={() => setShowDialer(false)} />
+        </Box>
+      </Box>
     </Box>
   );
 };

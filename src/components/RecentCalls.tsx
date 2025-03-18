@@ -17,7 +17,6 @@ import {
   PhoneOutgoing,
   PhoneX,
 } from "@phosphor-icons/react";
-import { useTheme, useMediaQuery } from "@mui/material";
 
 interface Call {
   id: number;
@@ -38,9 +37,6 @@ const RecentCalls: React.FC<RecentCallsProps> = ({
   onDialClick,
   dialerStatus,
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
   const formatDate = (timestamp: Date | number) =>
     new Date(timestamp).toLocaleTimeString([], {
       hour: "2-digit",
@@ -139,22 +135,20 @@ const RecentCalls: React.FC<RecentCallsProps> = ({
             ))
         )}
       </Box>
-      {isMobile && (
-        <Fab
-          color="primary"
-          onClick={onDialClick}
-          sx={{
-            position: "absolute",
-            bottom: 0,
-            right: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            display: dialerStatus ? "none" : "block",
-          }}
-        >
-          <Phone color="white" style={{ marginTop: "6px" }} size={18} />
-        </Fab>
-      )}
+      <Fab
+        color="primary"
+        onClick={onDialClick}
+        sx={{
+          position: "absolute",
+          bottom: 0,
+          right: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          display: dialerStatus ? "none" : "block",
+        }}
+      >
+        <Phone color="white" style={{ marginTop: "6px" }} size={18} />
+      </Fab>
     </Box>
   );
 };

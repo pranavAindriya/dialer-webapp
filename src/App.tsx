@@ -11,7 +11,7 @@ const App = () => {
     palette: {
       mode: "light",
       primary: { main: "#4caf50" },
-      background: { default: "#f5f5f5", paper: "#ffffff" },
+      background: { default: "#ffffff", paper: "#f5f5f5" },
     },
     typography: {
       fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
@@ -29,7 +29,7 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Container
-        maxWidth={"lg"}
+        maxWidth={"md"}
         disableGutters
         sx={{ height: "100dvh", backgroundColor: "#f5f5f5" }}
       >

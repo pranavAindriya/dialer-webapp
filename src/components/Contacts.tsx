@@ -18,8 +18,8 @@ import {
 import { MagnifyingGlass, Phone } from "@phosphor-icons/react";
 import { callPartyStore } from "../zustand/callPartyStore";
 import { useAuthStore } from "../zustand/authStore";
-import ContactAddModal from "../Modals/contactAddModal/contactAddModal";
 import axios from "axios";
+import AddContactModal from "../Modals/AddCondactModal/AddCondactModal";
 
 interface Contact {
   // id: number;
@@ -237,7 +237,7 @@ const Contacts: React.FC<ContactsProps> = ({
       >
         <Phone color="white" style={{ marginTop: "6px" }} size={18} />
       </Fab>
-      <ContactAddModal open={addContactOpen} handleClose={handleCloseAddContact} />
+      <AddContactModal open={addContactOpen} handleClose={handleCloseAddContact} />
     </Box>
   );
 };

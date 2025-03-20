@@ -4,6 +4,7 @@ import { AddressBook, ClockCounterClockwise } from "@phosphor-icons/react";
 import Dialer from "./components/Dialer";
 import RecentCalls from "./components/RecentCalls";
 import Contacts from "./components/Contacts";
+import { callPartyStore } from "./zustand/callPartyStore";
 
 interface Call {
   id: number;
@@ -22,9 +23,9 @@ interface Call {
 // }
 
 const Page: React.FC = () => {
+  const { apartyno } = callPartyStore();
   const [tabValue, setTabValue] = useState(0);
   const [showDialer, setShowDialer] = useState(false);
-
   const [recentCalls, setRecentCalls] = useState([
     {
       id: 1,
@@ -114,7 +115,6 @@ const Page: React.FC = () => {
             )}
             {tabValue === 1 && (
               <Contacts
-                contacts={contacts}
                 onDialClick={() => setShowDialer(true)}
                 dialerStatus={showDialer}
               />

@@ -7,8 +7,8 @@ interface CallPartyState {
   reference_id: string;
   dtmfflag: number;
   recordingflag: number;
-  setApartyNo: (data: number | string | null) => void;
-  setBpartyNo: (data: number | string | null) => void;
+  setApartyNo: (data: number | string | null | undefined) => void;
+  setBpartyNo: (data: number | string | null | undefined) => void;
 }
 
 export const callPartyStore = create<CallPartyState>((set) => ({
@@ -19,10 +19,10 @@ export const callPartyStore = create<CallPartyState>((set) => ({
   dtmfflag: 1,
   recordingflag: 0,
 
-  setApartyNo: (data: number | string | null) => {
+  setApartyNo: (data: number | string | null | undefined) => {
     set((state) => ({ ...state, apartyno: data }));
   },
-  setBpartyNo: (data: number | string | null) => {
+  setBpartyNo: (data: number | string | null | undefined) => {
     set((state) => ({ ...state, bpartyno: data }));
   },
 }));

@@ -3,7 +3,11 @@ import axios from "axios";
 import { persist } from "zustand/middleware";
 
 interface User {
-  username: string;
+  user_id: number;
+  email: string;
+  f_name: string;
+  l_name: string;
+  phone: string;
   // Add any other user properties returned from your API
 }
 
@@ -13,7 +17,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -25,8 +29,9 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       isLoading: false,
+      phone: null,
       error: null,
-      login: async (username, password) => {
+      login: async (email, password) => {
         set({ isLoading: true, error: null });
         try {
           const headers = {
@@ -34,22 +39,37 @@ export const useAuthStore = create<AuthState>()(
           };
 
           const formData = new URLSearchParams();
-          formData.append("username", username);
+          formData.append("email", email);
           formData.append("password", password);
 
           const response = await axios.post(
-            `${import.meta.env.VITE_BASE_URL}/api/clicktocall/AuthToken`,
+            `${import.meta.env.VITE_BASE_URL}/api/login`,
             formData,
             { headers }
           );
 
-          set({
-            token: response.data.idToken,
-            user: { username, ...response?.data?.user },
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
+          console.log("response", response);
+
+          if (response.data?.success) {
+            set({
+              token: response.data.token,
+              user: {
+                user_id: response.data?.user_id,
+                email,
+                f_name: response.data?.f_name,
+                l_name: response.data?.l_name,
+                phone: response?.data?.phone,
+              },
+              isAuthenticated: true,
+              isLoading: false,
+              error: response?.data?.errorMsg,
+            });
+          } else {
+            set({
+              isLoading: false,
+              error: response?.data?.errorMsg,
+            });
+          }
         } catch (error) {
           let errorMessage = "An unknown error occurred";
           if (axios.isAxiosError(error)) {

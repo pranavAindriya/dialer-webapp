@@ -1,7 +1,7 @@
-import { Alert, Box, Button, CircularProgress, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, TextField, Typography } from '@mui/material'
 
 import React, { useState } from "react";
-import { useAuthStore } from '../../../zustand/authStore';
+// import { useAuthStore } from '../../../zustand/authStore';
 import axios from 'axios';
 
 type SignUpTypes = {
@@ -18,7 +18,7 @@ type FormTypes = {
 
 const SignUpForm = ({ handleChangePage }: SignUpTypes) => {
   const [error, setError] = useState<string>("")
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  // const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const [formValues, setFormValues] = useState<FormTypes>({
     f_name: "",
@@ -79,7 +79,7 @@ const SignUpForm = ({ handleChangePage }: SignUpTypes) => {
           autoFocus
           value={formValues.f_name}
           onChange={handleChange}
-          disabled={isLoading}
+        // disabled={isLoading}
         />
 
         <TextField
@@ -92,7 +92,7 @@ const SignUpForm = ({ handleChangePage }: SignUpTypes) => {
           autoComplete="l_name"
           value={formValues.l_name}
           onChange={handleChange}
-          disabled={isLoading}
+        // disabled={isLoading}
         />
         <TextField
           margin="normal"
@@ -104,7 +104,7 @@ const SignUpForm = ({ handleChangePage }: SignUpTypes) => {
           autoComplete="email"
           value={formValues.email}
           onChange={handleChange}
-          disabled={isLoading}
+        // disabled={isLoading}
         />
         <TextField
           margin="normal"
@@ -118,7 +118,7 @@ const SignUpForm = ({ handleChangePage }: SignUpTypes) => {
 
           value={formValues.phone}
           onChange={handleChange}
-          disabled={isLoading}
+        // disabled={isLoading}
         />
         <TextField
           margin="normal"
@@ -131,16 +131,17 @@ const SignUpForm = ({ handleChangePage }: SignUpTypes) => {
           autoComplete="current-password"
           value={formValues.password}
           onChange={handleChange}
-          disabled={isLoading}
+        // disabled={isLoading}
         />
         <Button
           type="submit"
           fullWidth
           variant="contained"
           sx={{ mt: 3, mb: 2, color: "white" }}
-          disabled={isLoading}
+        // disabled={isLoading}
         >
-          {isLoading ? <CircularProgress size={24} /> : "SignUp"}
+          {/* {isLoading ? <CircularProgress size={24} /> : "SignUp"} */}
+          Signup
         </Button>
       </Box>
       <Box sx={{ display: "flex", justifyContent: "center" }}>

@@ -37,7 +37,7 @@ const Contacts: React.FC<ContactsProps> = ({
   dialerStatus,
 }) => {
 
-  const {  setBpartyNo, apartyno, bpartyno } = callPartyStore();
+  const { setBpartyNo, apartyno, bpartyno } = callPartyStore();
   const { user, token } = useAuthStore()
   const [addContactOpen, setaddContactOpen] = useState<boolean>(false)
   const [searchQuery, setSearchQuery] = useState("");

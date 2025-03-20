@@ -120,6 +120,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
 
   // Function to handle the call initiation
   const handleInitiateCall = async () => {
+    setResponseModalOpen(true);
     try {
       setIsCallLoading(true);
       setApiError(null);
@@ -143,13 +144,12 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
       const response = await axios.post("api/initiate-call", payload, config);
 
       setApiResponse(response.data);
-      setResponseModalOpen(true);
+
     } catch (err) {
       console.error("Error initiating call:", err);
       setApiError(
         err instanceof Error ? err.message : "Unknown error occurred"
       );
-      setResponseModalOpen(true);
     } finally {
       setIsCallLoading(false);
     }
@@ -403,7 +403,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
         onClose={handleResponseModalClose}
         aria-labelledby="response-modal-title"
       >
-        <Box sx={responseModalStyle}>
+        {!apiError && !apiResponse ? <Box sx={responseModalStyle}>Dialing...</Box> : <Box sx={responseModalStyle}>
           <Box
             display="flex"
             justifyContent="space-between"
@@ -440,7 +440,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
               </pre>
             </Box>
           )}
-        </Box>
+        </Box>}
       </Modal>
     </Box>
   );

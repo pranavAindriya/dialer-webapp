@@ -8,16 +8,14 @@ import {
   useMediaQuery,
   useTheme,
   Modal,
-  TextField,
   Alert,
   CircularProgress,
   Tooltip,
 } from "@mui/material";
-import { Backspace, Phone, X, Trash } from "@phosphor-icons/react";
+import { Backspace, Phone, X } from "@phosphor-icons/react";
 import { useAuthStore } from "../zustand/authStore";
 import { callPartyStore } from "../zustand/callPartyStore";
 import axios from "axios";
-import AuthModal from "../Modals/AuthModal/AuthModal";
 
 const style = {
   position: "absolute",
@@ -67,7 +65,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
   const [responseModalOpen, setResponseModalOpen] = useState(false);
 
   // Get auth state from zustand
-  const { isAuthenticated, isLoading, error, login, logout, token } =
+  const { isAuthenticated, logout, token } =
     useAuthStore();
 
   const {
@@ -109,9 +107,9 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
     }
   };
 
-  const handleReset = () => {
-    callPartyStore.setState({ apartyno: "", bpartyno: "" });
-  };
+  // const handleReset = () => {
+  //   callPartyStore.setState({ apartyno: "", bpartyno: "" });
+  // };
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -242,7 +240,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
         <Typography variant="h4" sx={{ fontWeight: "medium" }}>
           {bpartyno}
         </Typography>
-        {bpartyno && bpartyno.toString().length  > 0 && (
+        {bpartyno && bpartyno.toString().length > 0 && (
           <IconButton
             sx={{ position: "absolute", right: 0 }}
             onClick={handleBackspace}

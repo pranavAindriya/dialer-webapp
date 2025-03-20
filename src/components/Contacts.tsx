@@ -14,12 +14,10 @@ import {
   Paper,
   Button,
   Fab,
-  Chip,
 } from "@mui/material";
 import { MagnifyingGlass, Phone } from "@phosphor-icons/react";
 import { callPartyStore } from "../zustand/callPartyStore";
 import { useAuthStore } from "../zustand/authStore";
-import AuthModal from "../Modals/AuthModal/AuthModal";
 import ContactAddModal from "../Modals/contactAddModal/contactAddModal";
 import axios from "axios";
 
@@ -39,7 +37,7 @@ const Contacts: React.FC<ContactsProps> = ({
   dialerStatus,
 }) => {
 
-  const { setApartyNo, setBpartyNo, apartyno, bpartyno } = callPartyStore();
+  const {  setBpartyNo, apartyno, bpartyno } = callPartyStore();
   const { user, token } = useAuthStore()
   const [addContactOpen, setaddContactOpen] = useState<boolean>(false)
   const [searchQuery, setSearchQuery] = useState("");

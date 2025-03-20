@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   List,
@@ -14,39 +14,69 @@ import {
   Paper,
   Button,
   Fab,
-  Chip,
 } from "@mui/material";
 import { MagnifyingGlass, Phone } from "@phosphor-icons/react";
 import { callPartyStore } from "../zustand/callPartyStore";
 import { useAuthStore } from "../zustand/authStore";
+import axios from "axios";
+import AddContactModal from "../Modals/AddCondactModal/AddCondactModal";
 
 interface Contact {
-  id: number;
+  // id: number;
   name: string;
-  number: string;
+  phone: string;
 }
 
 interface ContactsProps {
-  contacts: Contact[];
   onDialClick: () => void;
   dialerStatus: boolean;
 }
 
 const Contacts: React.FC<ContactsProps> = ({
-  contacts,
   onDialClick,
   dialerStatus,
 }) => {
+
+  const { setBpartyNo, apartyno, bpartyno } = callPartyStore();
+  const { user, token } = useAuthStore()
+  const [addContactOpen, setaddContactOpen] = useState<boolean>(false)
   const [searchQuery, setSearchQuery] = useState("");
+  const [contactList, setContactList] = useState<Contact[]>([])
 
-  const { setApartyNo, setBpartyNo, apartyno, bpartyno } = callPartyStore();
+  const fetchContactList = async () => {
+    try {
+      const res = await axios.post("https://phpstack-1431591-5347985.cloudwaysapps.com/api/contact-list",
+        { user_id: user?.user_id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
 
-  const { isAuthenticated } = useAuthStore();
+      if (res.data.success) {
+        setContactList(res.data.contact_data)
+      }
+      console.log(res);
 
-  const filteredContacts = contacts.filter(
+    } catch (err) {
+      console.log(err);
+
+    }
+  }
+  useEffect(() => {
+    if (!addContactOpen) {
+
+      fetchContactList()
+    }
+  }, [addContactOpen])
+
+
+
+
+  const filteredContacts = contactList.filter(
     (contact) =>
       contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.number.includes(searchQuery)
+      contact.phone.includes(searchQuery)
   );
 
   const groupByFirstLetter = () => {
@@ -68,30 +98,45 @@ const Contacts: React.FC<ContactsProps> = ({
     return null;
   };
 
+  const handleCloseAddContact = () => setaddContactOpen(false);
+
+  const handleCall = (contact: Contact) => {
+    console.log(contact);
+    onDialClick()
+    setBpartyNo(contact.phone)
+  }
+
+
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <Paper
-        elevation={0}
-        sx={{
-          p: "4px 8px",
-          display: "flex",
-          alignItems: "center",
-          border: "1px solid",
-          borderColor: "divider",
-          borderRadius: "20px",
-        }}
-      >
-        <MagnifyingGlass
-          size={20}
-          style={{ marginInline: 1, color: "action.active" }}
-        />
-        <InputBase
-          sx={{ ml: 1, flex: 1, mt: 0.3 }}
-          placeholder="Search name, number..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </Paper>
+      <Box sx={{ display: "flex", alignItems: "center", gap: "20px" }}>
+
+        <Paper
+          elevation={0}
+          sx={{
+            p: "4px 8px",
+            display: "flex",
+            alignItems: "center",
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: "20px",
+            flex: "1"
+          }}
+        >
+          <MagnifyingGlass
+            size={20}
+            style={{ marginInline: 1, color: "action.active" }}
+          />
+          <InputBase
+            sx={{ ml: 1, flex: 1, mt: 0.3 }}
+            placeholder="Search name, number..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </Paper>
+        <Button variant="contained" sx={{ color: "white" }} onClick={() => setaddContactOpen(true)}>Add </Button>
+        <Button variant="contained" sx={{ color: "white" }}>Import </Button>
+      </Box>
 
       <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
         {Object.keys(contactGroups).length === 0 ? (
@@ -114,9 +159,9 @@ const Contacts: React.FC<ContactsProps> = ({
                 </Typography>
                 <List dense>
                   {group.map((contact, index) => {
-                    const contactRole = getContactRole(contact.number);
+                    const contactRole = getContactRole(contact.phone);
                     return (
-                      <React.Fragment key={contact.id}>
+                      <React.Fragment key={index}>
                         <ListItem
                           sx={{
                             bgcolor: contactRole
@@ -128,9 +173,7 @@ const Contacts: React.FC<ContactsProps> = ({
                             <Avatar
                               sx={{
                                 bgcolor:
-                                  contactRole === "A-party"
-                                    ? "primary.main"
-                                    : contactRole === "B-party"
+                                  contactRole === "B-party"
                                     ? "info.main"
                                     : undefined,
                               }}
@@ -142,7 +185,7 @@ const Contacts: React.FC<ContactsProps> = ({
                             primary={
                               <Box display="flex" alignItems="center" gap={1}>
                                 <Typography>{contact.name}</Typography>
-                                {contactRole && (
+                                {/* {contactRole && (
                                   <Chip
                                     label={contactRole}
                                     size="small"
@@ -158,61 +201,13 @@ const Contacts: React.FC<ContactsProps> = ({
                                       paddingTop: "2px",
                                     }}
                                   />
-                                )}
+                                )} */}
                               </Box>
                             }
-                            secondary={contact.number}
+                            secondary={contact.phone}
                           />
                           <ListItemSecondaryAction>
-                            {!isAuthenticated && (
-                              <Typography
-                                color="primary"
-                                fontSize={10}
-                                display={"inline"}
-                                sx={{
-                                  cursor: "pointer",
-                                  mr: 1,
-                                }}
-                              >
-                                Login To add as Party
-                              </Typography>
-                            )}
-                            {!apartyno && isAuthenticated && !contactRole && (
-                              <Button
-                                variant="text"
-                                size="small"
-                                onClick={() => setApartyNo(contact.number)}
-                              >
-                                Set as Aparty
-                              </Button>
-                            )}
-                            {!bpartyno && isAuthenticated && !contactRole && (
-                              <Button
-                                color="info"
-                                variant="text"
-                                size="small"
-                                onClick={() => setBpartyNo(contact.number)}
-                              >
-                                Set as Bparty
-                              </Button>
-                            )}
-                            {contactRole && isAuthenticated && (
-                              <Button
-                                color="error"
-                                variant="text"
-                                size="small"
-                                onClick={() => {
-                                  if (contactRole === "A-party") {
-                                    setApartyNo("");
-                                  } else {
-                                    setBpartyNo("");
-                                  }
-                                }}
-                              >
-                                Remove
-                              </Button>
-                            )}
-                            <IconButton edge="end">
+                            <IconButton edge="end" onClick={() => handleCall(contact)} color="primary">
                               <Phone />
                             </IconButton>
                           </ListItemSecondaryAction>
@@ -242,6 +237,7 @@ const Contacts: React.FC<ContactsProps> = ({
       >
         <Phone color="white" style={{ marginTop: "6px" }} size={18} />
       </Fab>
+      <AddContactModal open={addContactOpen} handleClose={handleCloseAddContact} />
     </Box>
   );
 };

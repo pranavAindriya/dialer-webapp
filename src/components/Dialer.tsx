@@ -8,12 +8,11 @@ import {
   useMediaQuery,
   useTheme,
   Modal,
-  TextField,
   Alert,
   CircularProgress,
   Tooltip,
 } from "@mui/material";
-import { Backspace, Phone, X, Trash } from "@phosphor-icons/react";
+import { Backspace, Phone, X } from "@phosphor-icons/react";
 import { useAuthStore } from "../zustand/authStore";
 import { callPartyStore } from "../zustand/callPartyStore";
 import axios from "axios";
@@ -54,10 +53,8 @@ interface ApiResponse {
 }
 
 const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
-  const [inputNumber, setInputNumber] = useState("");
+  // const [inputNumber, setInputNumber] = useState("");
   const [open, setOpen] = React.useState(false);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -68,7 +65,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
   const [responseModalOpen, setResponseModalOpen] = useState(false);
 
   // Get auth state from zustand
-  const { isAuthenticated, isLoading, error, login, logout, token } =
+  const { isAuthenticated, logout, token } =
     useAuthStore();
 
   const {
@@ -82,24 +79,18 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
     setBpartyNo,
   } = callPartyStore();
 
-  // Reset form when modal closes
-  useEffect(() => {
-    if (!open) {
-      setUsername("");
-      setPassword("");
-    }
-  }, [open]);
-
   const handleNumberClick = (num: string) => {
     if (apartyno && bpartyno) {
       setApartyNo(null);
       setBpartyNo(null);
     }
-    setInputNumber((prev) => prev + num);
+    const prevValue = callPartyStore.getState().bpartyno || "";
+    setBpartyNo(prevValue.toString() + num);
   };
 
   const handleBackspace = () => {
-    setInputNumber((prev) => prev.slice(0, -1));
+    const prevValue = callPartyStore.getState().bpartyno || ""; // Get current value
+    setBpartyNo(prevValue.toString().slice(0, -1))
   };
 
   const handleDial = () => {
@@ -110,27 +101,21 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
 
     if (apartyno && bpartyno) {
       handleInitiateCall();
-    } else if (inputNumber.length > 0) {
-      onDial(inputNumber);
-      setInputNumber("");
+    } else if (bpartyno && bpartyno.toString().length > 0) { // Ensure bpartyno is not undefined
+      onDial(bpartyno.toString());
+      setBpartyNo(""); // Reset after dialing
     }
   };
 
-  const handleReset = () => {
-    callPartyStore.setState({ apartyno: "", bpartyno: "" });
-    setInputNumber("");
-  };
+  // const handleReset = () => {
+  //   callPartyStore.setState({ apartyno: "", bpartyno: "" });
+  // };
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
   const handleResponseModalClose = () => {
     setResponseModalOpen(false);
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await login(username, password);
   };
 
   // Function to handle the call initiation
@@ -155,7 +140,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
         },
       };
 
-      const response = await axios.post("/api/initiate-call", payload, config);
+      const response = await axios.post("api/initiate-call", payload, config);
 
       setApiResponse(response.data);
       setResponseModalOpen(true);
@@ -175,6 +160,14 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
       handleClose();
     }
   }, [isAuthenticated, open]);
+
+  useEffect(() => {
+    console.log(bpartyno);
+
+  }, [])
+
+  console.log(bpartyno);
+
 
   const dialButtons = [
     ["1", "2", "3"],
@@ -245,9 +238,9 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
       >
         {/* Current number input display */}
         <Typography variant="h4" sx={{ fontWeight: "medium" }}>
-          {inputNumber}
+          {bpartyno}
         </Typography>
-        {inputNumber.length > 0 && (
+        {bpartyno && bpartyno.toString().length > 0 && (
           <IconButton
             sx={{ position: "absolute", right: 0 }}
             onClick={handleBackspace}
@@ -256,8 +249,8 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
           </IconButton>
         )}
 
-        {/* Show party numbers if inputNumber is empty */}
-        {!inputNumber && (
+        {/* Show party numbers if bpartyno is empty */}
+        {/* {!bpartyno && (
           <Box
             sx={{
               display: "flex",
@@ -290,7 +283,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
               </Tooltip>
             )}
           </Box>
-        )}
+        )} */}
       </Box>
 
       <Grid container spacing={2} sx={{ flexGrow: 1 }}>
@@ -330,7 +323,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
             }}
             onClick={handleDial}
             disableRipple={
-              isCallLoading || (!inputNumber && (!apartyno || !bpartyno))
+              isCallLoading || (!bpartyno && (!apartyno || !bpartyno))
             }
           >
             {isCallLoading ? (
@@ -342,7 +335,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
         </Tooltip>
       </Box>
 
-      <Modal
+      {/* <Modal
         open={open}
         onClose={handleClose}
         aria-labelledby="login-modal-title"
@@ -403,7 +396,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
             </Button>
           </Box>
         </Box>
-      </Modal>
+      </Modal> */}
 
       <Modal
         open={responseModalOpen}

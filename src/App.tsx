@@ -5,8 +5,31 @@ import {
   ThemeProvider,
 } from "@mui/material";
 import Page from "./Page";
+import AuthModal from "./Modals/AuthModal/AuthModal";
+import { useEffect } from "react";
+import { useLoginStore } from "./zustand/loginModalStore";
+import { useAuthStore } from "./zustand/authStore";
+import { callPartyStore } from "./zustand/callPartyStore";
 
 const App = () => {
+  const { setLoginPopupOpen } = useLoginStore();
+  const { isAuthenticated, user } =
+    useAuthStore();
+  const { setApartyNo } = callPartyStore();
+  useEffect(() => {
+    if (isAuthenticated) {
+      setApartyNo(user?.phone)
+      setLoginPopupOpen(false)
+    }
+  }, [isAuthenticated])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setLoginPopupOpen(false)
+    } else {
+      setLoginPopupOpen(true)
+    }
+  }, [isAuthenticated])
   const theme = createTheme({
     palette: {
       mode: "light",
@@ -25,6 +48,7 @@ const App = () => {
     },
   });
 
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -34,6 +58,7 @@ const App = () => {
         sx={{ height: "100dvh", backgroundColor: "#f5f5f5" }}
       >
         <Page />
+        <AuthModal />
       </Container>
     </ThemeProvider>
   );

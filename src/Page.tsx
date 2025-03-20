@@ -108,7 +108,6 @@ const Page: React.FC = () => {
           >
             {tabValue === 0 && (
               <RecentCalls
-                recentCalls={recentCalls}
                 onDialClick={() => setShowDialer(true)}
                 dialerStatus={showDialer}
               />

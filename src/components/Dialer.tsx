@@ -414,7 +414,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
             mb={2}
           >
             <Typography id="response-modal-title" variant="h6" component="h2">
-              API Response
+              Status
             </Typography>
             <IconButton onClick={handleResponseModalClose}>
               <X />
@@ -439,7 +439,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
               }}
             >
               <pre style={{ margin: 0 }}>
-                {JSON.stringify(apiResponse, null, 2)}
+                You will recive a call
               </pre>
             </Box>
           )}

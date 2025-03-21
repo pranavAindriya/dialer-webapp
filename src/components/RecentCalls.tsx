@@ -22,8 +22,8 @@ import { useAuthStore } from "../zustand/authStore";
 
 interface Call {
   id: number;
-  name?: string;
-  number: string;
+  name?: string | null;
+  phone: string;
   status: string;
   timestamp: string;
 }
@@ -128,7 +128,7 @@ const RecentCalls: React.FC<RecentCallsProps> = ({
                       {getStatusIcon(item.status)}
                     </ListItemIcon>
                     <ListItemText
-                      primary={item.name || item.number}
+                      primary={item.name || item.phone }
                       secondary={`${item.status === null ? "Not Connected" : item.status} | ${item.timestamp === null ? "0 Seconds" : item.timestamp}`}
                     />
                     <ListItemSecondaryAction>

@@ -79,6 +79,10 @@ const Page: React.FC = () => {
     setShowDialer(false);
   };
 
+  const handleCloseDialer = () => {
+    setShowDialer(false)
+  }
+
   return (
     <Box sx={{ height: "100dvh", display: "flex", flexDirection: "column" }}>
       <Box sx={{ flexGrow: 1, position: "relative", bgcolor: "white" }}>
@@ -157,7 +161,7 @@ const Page: React.FC = () => {
             md: { position: "static", height: "100%", transform: "none" },
           }}
         >
-          <Dialer onDial={handleDial} onClose={() => setShowDialer(false)} />
+          <Dialer onDial={handleDial} onClose={handleCloseDialer} />
         </Box>
       </Box>
     </Box>

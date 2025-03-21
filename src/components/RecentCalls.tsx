@@ -45,13 +45,15 @@ const RecentCalls: React.FC<RecentCallsProps> = ({
   //     minute: "2-digit",
   //   });
 
-  const getStatusIcon = (status: string) => {  
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case "Connected":
         return <PhoneOutgoing style={{ color: "#4caf50" }} />;
       case "User Not Responding":
         return <PhoneX style={{ color: "#f44336" }} />;
       case "Disconnected":
+        return <PhoneDisconnect style={{ color: "#9e9e9e" }} />;
+      case null:
         return <PhoneDisconnect style={{ color: "#9e9e9e" }} />;
       default:
         return <PhoneOutgoing style={{ color: "#4caf50" }} />;
@@ -127,7 +129,7 @@ const RecentCalls: React.FC<RecentCallsProps> = ({
                     </ListItemIcon>
                     <ListItemText
                       primary={item.name || item.number}
-                      secondary={`${item.status} | ${item.timestamp}`}
+                      secondary={`${item.status === null ? "Not Connected" : item.status} | ${item.timestamp === null ? "0 Seconds" : item.timestamp}`}
                     />
                     <ListItemSecondaryAction>
                       <IconButton edge="end">

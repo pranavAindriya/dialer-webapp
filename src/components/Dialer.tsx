@@ -75,15 +75,14 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
     reference_id,
     dtmfflag,
     recordingflag,
-    setApartyNo,
     setBpartyNo,
   } = callPartyStore();
 
   const handleNumberClick = (num: string) => {
-    if (apartyno && bpartyno) {
-      setApartyNo(null);
-      setBpartyNo(null);
-    }
+    // if (apartyno && bpartyno) {
+    //   setApartyNo(null);
+    //   setBpartyNo(null);
+    // }
     const prevValue = callPartyStore.getState().bpartyno || "";
     setBpartyNo(prevValue.toString() + num);
   };
@@ -166,7 +165,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
 
   }, [])
 
-  console.log(bpartyno);
+  // console.log(bpartyno);
 
 
   const dialButtons = [
@@ -190,6 +189,10 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
     "0": "+",
     "#": "",
   };
+
+  console.log("apartyno", apartyno);
+  console.log("bpartyno", bpartyno);
+
 
   return (
     <Box

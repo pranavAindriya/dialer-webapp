@@ -39,6 +39,8 @@ const AddContactModal = ({ open, handleClose }: ContactAddModalTypes) => {
                     }
                 })
             if (res.data.success) {
+                setName("")
+                setPhone("")
                 handleClose()
             } else {
                 setError("something went wrong")
@@ -50,6 +52,7 @@ const AddContactModal = ({ open, handleClose }: ContactAddModalTypes) => {
 
         }
     }
+
     return (
         <Modal
             open={open}

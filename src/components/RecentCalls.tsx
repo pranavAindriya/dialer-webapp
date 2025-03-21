@@ -45,13 +45,13 @@ const RecentCalls: React.FC<RecentCallsProps> = ({
   //     minute: "2-digit",
   //   });
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string) => {  
     switch (status) {
-      case "Outgoing":
+      case "Connected":
         return <PhoneOutgoing style={{ color: "#4caf50" }} />;
-      case "Missed":
+      case "User Not Responding":
         return <PhoneX style={{ color: "#f44336" }} />;
-      case "Not Picked":
+      case "Disconnected":
         return <PhoneDisconnect style={{ color: "#9e9e9e" }} />;
       default:
         return <PhoneOutgoing style={{ color: "#4caf50" }} />;
@@ -62,8 +62,6 @@ const RecentCalls: React.FC<RecentCallsProps> = ({
     const groups: { [key: string]: Call[] } = {};
     return groups;
   };
-
-
 
   const callsByDate = groupByDate();
   console.log(callsByDate);
@@ -102,8 +100,10 @@ const RecentCalls: React.FC<RecentCallsProps> = ({
   }
 
   useEffect(() => {
-    fetchRecentCalls()
-  }, [])
+    if (!dialerStatus) {
+      fetchRecentCalls()
+    }
+  }, [dialerStatus])
 
   return (
     <Box sx={{ height: "100%", position: "relative" }}>

@@ -64,12 +64,15 @@ const Contacts: React.FC<ContactsProps> = ({
     }
   }
   useEffect(() => {
-    if (!addContactOpen) {
-
+    if (!addContactOpen && !dialerStatus) {
       fetchContactList()
     }
-  }, [addContactOpen])
+  }, [addContactOpen, dialerStatus])
 
+
+  useEffect(() => {
+    fetchContactList()
+  }, [])
 
 
 

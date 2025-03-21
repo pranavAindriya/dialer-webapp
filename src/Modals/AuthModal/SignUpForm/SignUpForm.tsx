@@ -15,17 +15,20 @@ type FormTypes = {
   email: string,
   password: string,
 };
+const emptyString = {
+  f_name: "",
+  l_name: "",
+  phone: "",
+  email: "",
+  password: "",
+}
 
 const SignUpForm = ({ handleChangePage }: SignUpTypes) => {
   const [error, setError] = useState<string>("")
   // const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const [formValues, setFormValues] = useState<FormTypes>({
-    f_name: "",
-    l_name: "",
-    phone: "",
-    email: "",
-    password: "",
+    ...emptyString
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,6 +42,7 @@ const SignUpForm = ({ handleChangePage }: SignUpTypes) => {
       const res = await axios.post("https://phpstack-1431591-5347985.cloudwaysapps.com/api/create-user", formValues)
       if (res.data.success) {
         handleChangePage()
+        setFormValues({ ...emptyString })
       } else {
         setError(res.data.errorMsg)
       }

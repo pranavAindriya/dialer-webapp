@@ -16,7 +16,7 @@ export const callPartyStore = create<CallPartyState>((set) => ({
   apartyno: "",
   bpartyno: "",
   reference_id: "",
-  dtmfflag: 1,
+  dtmfflag: 0,
   recordingflag: 0,
 
   setApartyNo: (data: number | string | null | undefined) => {

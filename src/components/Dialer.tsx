@@ -129,7 +129,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
         apartyno: apartyno || "",
         bpartyno: bpartyno || "",
         reference_id: reference_id || "1212",
-        dtmfflag: dtmfflag || 1,
+        dtmfflag: dtmfflag || 0,
         recordingflag: recordingflag || 0,
       };
 

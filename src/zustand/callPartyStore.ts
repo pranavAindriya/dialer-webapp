@@ -12,7 +12,7 @@ interface CallPartyState {
 }
 
 export const callPartyStore = create<CallPartyState>((set) => ({
-  cli: "9610012318",
+  cli: "1600413802",
   apartyno: "",
   bpartyno: "",
   reference_id: "",

@@ -125,7 +125,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
       setApiError(null);
 
       const payload = {
-        cli: cli || "9610012318",
+        cli: cli || "1600413802",
         apartyno: apartyno || "",
         bpartyno: bpartyno || "",
         reference_id: reference_id || "1212",

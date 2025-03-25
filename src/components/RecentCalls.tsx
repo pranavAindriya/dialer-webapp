@@ -9,7 +9,6 @@ import {
   Typography,
   IconButton,
   Divider,
-  Fab,
 } from "@mui/material";
 import {
   Phone,
@@ -33,12 +32,9 @@ interface RecentCallsProps {
   dialerStatus: boolean;
 }
 
-const RecentCalls: React.FC<RecentCallsProps> = ({
-  onDialClick,
-  dialerStatus,
-}) => {
-  const { user, token } = useAuthStore()
-  const [recentCalls, setRecentCalls] = useState<Call[]>([])
+const RecentCalls: React.FC<RecentCallsProps> = ({ dialerStatus }) => {
+  const { user, token } = useAuthStore();
+  const [recentCalls, setRecentCalls] = useState<Call[]>([]);
   // const formatDate = (timestamp: Date | number) =>
   //   new Date(timestamp).toLocaleTimeString([], {
   //     hour: "2-digit",
@@ -79,33 +75,34 @@ const RecentCalls: React.FC<RecentCallsProps> = ({
   //   return date.toLocaleDateString();
   // };
 
-  const fetchRecentCalls = async () => {
+  const fetchRecentCalls = React.useCallback(async () => {
     try {
-      const res = await axios.post("https://phpstack-1431591-5347985.cloudwaysapps.com/api/get/recents-calls", { user_id: user?.user_id }, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      const res = await axios.post(
+        "https://phpstack-1431591-5347985.cloudwaysapps.com/api/get/recents-calls",
+        { user_id: user?.user_id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      })
+      );
 
       if (res.data?.success) {
-        setRecentCalls(res.data.recent_calls)
+        setRecentCalls(res.data.recent_calls);
       } else {
         console.log("something went wrong");
-
       }
       console.log(res);
-
     } catch (err) {
       console.log(err);
-
     }
-  }
+  }, [user?.user_id, token]);
 
   useEffect(() => {
     if (!dialerStatus) {
-      fetchRecentCalls()
+      fetchRecentCalls();
     }
-  }, [dialerStatus])
+  }, [dialerStatus, fetchRecentCalls]);
 
   return (
     <Box sx={{ height: "100%", position: "relative" }}>
@@ -120,7 +117,8 @@ const RecentCalls: React.FC<RecentCallsProps> = ({
         ) : (
           <>
             <Box>Recent Calls</Box>
-            <List sx={{ padding: 0, listStyle: "none" }}> {/* Remove default list styles */}
+            <List sx={{ padding: 0, listStyle: "none" }}>
+              {/* Remove default list styles */}
               {recentCalls.map((item, index) => (
                 <React.Fragment key={item.id}>
                   <ListItem>
@@ -128,8 +126,12 @@ const RecentCalls: React.FC<RecentCallsProps> = ({
                       {getStatusIcon(item.status)}
                     </ListItemIcon>
                     <ListItemText
-                      primary={item.name || item.phone }
-                      secondary={`${item.status === null ? "Not Connected" : item.status} | ${item.timestamp === null ? "0 Seconds" : item.timestamp}`}
+                      primary={item.name || item.phone}
+                      secondary={`${
+                        item.status === null ? "Not Connected" : item.status
+                      } | ${
+                        item.timestamp === null ? "0 Seconds" : item.timestamp
+                      }`}
                     />
                     <ListItemSecondaryAction>
                       <IconButton edge="end">
@@ -137,34 +139,20 @@ const RecentCalls: React.FC<RecentCallsProps> = ({
                       </IconButton>
                     </ListItemSecondaryAction>
                   </ListItem>
-                  {index < recentCalls.length - 1 && <Divider variant="inset" />}
+                  {index < recentCalls.length - 1 && (
+                    <Divider variant="inset" />
+                  )}
                 </React.Fragment>
               ))}
             </List>
           </>
-
         )}
       </Box>
-      <Fab
-        color="primary"
-        onClick={onDialClick}
-        sx={{
-          position: "absolute",
-          bottom: 0,
-          right: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          display: dialerStatus ? "none" : "block",
-        }}
-      >
-        <Phone color="white" style={{ marginTop: "6px" }} size={18} />
-      </Fab>
     </Box>
   );
 };
 
 export default RecentCalls;
-
 
 // Object.entries(callsByDate)
 //             .sort(

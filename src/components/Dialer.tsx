@@ -1,4 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+  KeyboardEvent,
+  ClipboardEvent,
+} from "react";
 import {
   Box,
   Typography,
@@ -12,7 +17,7 @@ import {
   CircularProgress,
   Tooltip,
 } from "@mui/material";
-import { Backspace, Phone, X } from "@phosphor-icons/react";
+import { Backspace, CaretDown, Phone, X } from "@phosphor-icons/react";
 import { useAuthStore } from "../zustand/authStore";
 import { callPartyStore } from "../zustand/callPartyStore";
 import axios from "axios";
@@ -53,7 +58,6 @@ interface ApiResponse {
 }
 
 const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
-  // const [inputNumber, setInputNumber] = useState("");
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -65,8 +69,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
   const [responseModalOpen, setResponseModalOpen] = useState(false);
 
   // Get auth state from zustand
-  const { isAuthenticated, logout, token } =
-    useAuthStore();
+  const { isAuthenticated, token } = useAuthStore();
 
   const {
     apartyno,
@@ -78,18 +81,45 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
     setBpartyNo,
   } = callPartyStore();
 
+  // Handle number click for dialer buttons
   const handleNumberClick = (num: string) => {
-    // if (apartyno && bpartyno) {
-    //   setApartyNo(null);
-    //   setBpartyNo(null);
-    // }
     const prevValue = callPartyStore.getState().bpartyno || "";
-    setBpartyNo(prevValue.toString() + num);
+    if (prevValue.toString().length < 10) {
+      setBpartyNo(prevValue.toString() + num);
+    }
+  };
+
+  // Handle keyboard input
+  const handleKeyboardInput = (e: KeyboardEvent<HTMLDivElement>) => {
+    const key = e.key;
+
+    // Allow only numeric keys, backspace, and delete
+    if (/^[0-9]$/.test(key)) {
+      const prevValue = callPartyStore.getState().bpartyno || "";
+      if (prevValue.toString().length < 10) {
+        setBpartyNo(prevValue.toString() + key);
+      }
+    } else if (key === "Backspace" || key === "Delete") {
+      handleBackspace();
+    }
+  };
+
+  // Handle paste event with validation
+  const handlePaste = (e: ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData("text");
+    const numericPaste = pastedText.replace(/\D/g, ""); // Remove non-numeric characters
+
+    const prevValue = callPartyStore.getState().bpartyno || "";
+    const combinedValue = prevValue + numericPaste;
+    const finalValue = combinedValue.slice(0, 10); // Limit to 10 digits
+
+    setBpartyNo(finalValue);
   };
 
   const handleBackspace = () => {
     const prevValue = callPartyStore.getState().bpartyno || ""; // Get current value
-    setBpartyNo(prevValue.toString().slice(0, -1))
+    setBpartyNo(prevValue.toString().slice(0, -1));
   };
 
   const handleDial = () => {
@@ -100,15 +130,12 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
 
     if (apartyno && bpartyno) {
       handleInitiateCall();
-    } else if (bpartyno && bpartyno.toString().length > 0) { // Ensure bpartyno is not undefined
+    } else if (bpartyno && bpartyno.toString().length > 0) {
+      // Ensure bpartyno is not undefined
       onDial(bpartyno.toString());
       setBpartyNo(""); // Reset after dialing
     }
   };
-
-  // const handleReset = () => {
-  //   callPartyStore.setState({ apartyno: "", bpartyno: "" });
-  // };
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -143,7 +170,6 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
       const response = await axios.post("api/initiate-call", payload, config);
 
       setApiResponse(response.data);
-
     } catch (err) {
       console.error("Error initiating call:", err);
       setApiError(
@@ -159,14 +185,6 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
       handleClose();
     }
   }, [isAuthenticated, open]);
-
-  useEffect(() => {
-    console.log(bpartyno);
-
-  }, [])
-
-  // console.log(bpartyno);
-
 
   const dialButtons = [
     ["1", "2", "3"],
@@ -190,10 +208,6 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
     "#": "",
   };
 
-  console.log("apartyno", apartyno);
-  console.log("bpartyno", bpartyno);
-
-
   return (
     <Box
       sx={{
@@ -201,31 +215,26 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
         display: "flex",
         flexDirection: "column",
         p: 2,
+        pb: 4,
         bgcolor: "background.paper",
-        borderRight: !isMobile ? `1px solid ${theme.palette.divider}` : "none",
+        border: !isMobile ? `1px solid ${theme.palette.divider}` : "none",
+        outline: "none",
       }}
+      tabIndex={0}
+      onKeyDown={handleKeyboardInput}
+      onPaste={handlePaste}
     >
-      <IconButton onClick={onClose} sx={{ alignSelf: "flex-end" }}>
-        <X />
-      </IconButton>
-      <Box
-        display={"flex"}
-        justifyContent={"space-between"}
-        alignItems={"center"}
-      >
-        <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+      <Box display={"flex"} alignItems={"center"}>
+        <Typography
+          variant="h6"
+          sx={{ fontWeight: 500, fontSize: 25, flexGrow: 1 }}
+        >
           Dialer
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ color: "white" }}
-          onClick={!isAuthenticated ? handleOpen : logout}
-        >
-          <Typography variant="subtitle2">
-            {isAuthenticated ? "Logout" : "Login"}
-          </Typography>
-        </Button>
+
+        <IconButton onClick={onClose} sx={{ alignSelf: "flex-end" }}>
+          <CaretDown />
+        </IconButton>
       </Box>
 
       <Box
@@ -239,7 +248,6 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
           flexDirection: "column",
         }}
       >
-        {/* Current number input display */}
         <Typography variant="h4" sx={{ fontWeight: "medium" }}>
           {bpartyno}
         </Typography>
@@ -251,42 +259,6 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
             <Backspace />
           </IconButton>
         )}
-
-        {/* Show party numbers if bpartyno is empty */}
-        {/* {!bpartyno && (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              width: "100%",
-              mt: 1,
-            }}
-          >
-            {apartyno && (
-              <Typography variant="body1" sx={{ textAlign: "center" }}>
-                Aparty Number: {apartyno}
-              </Typography>
-            )}
-            {bpartyno && (
-              <Typography variant="body1" sx={{ textAlign: "center" }}>
-                Bparty Number: {bpartyno}
-              </Typography>
-            )}
-            {(apartyno || bpartyno) && (
-              <Tooltip title="Clear numbers">
-                <IconButton
-                  color="error"
-                  size="small"
-                  onClick={handleReset}
-                  sx={{ mt: 1 }}
-                >
-                  <Trash size={20} />
-                </IconButton>
-              </Tooltip>
-            )}
-          </Box>
-        )} */}
       </Box>
 
       <Grid container spacing={2} sx={{ flexGrow: 1 }}>
@@ -338,112 +310,51 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
         </Tooltip>
       </Box>
 
-      {/* <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="login-modal-title"
-        aria-describedby="login-modal-description"
-      >
-        <Box sx={style}>
-          <Typography
-            id="login-modal-title"
-            variant="h5"
-            component="h2"
-            mb={2}
-            textAlign={"center"}
-          >
-            Login To Make Calls
-          </Typography>
-
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          <Box component="form" onSubmit={handleLogin} sx={{ mt: 1 }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="username"
-              label="Username"
-              name="username"
-              autoComplete="username"
-              autoFocus
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              disabled={isLoading}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2, color: "white" }}
-              disabled={isLoading}
-            >
-              {isLoading ? <CircularProgress size={24} /> : "Login"}
-            </Button>
-          </Box>
-        </Box>
-      </Modal> */}
-
       <Modal
         open={responseModalOpen}
         onClose={handleResponseModalClose}
         aria-labelledby="response-modal-title"
       >
-        {!apiError && !apiResponse ? <Box sx={responseModalStyle}>Dialing...</Box> : <Box sx={responseModalStyle}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={2}
-          >
-            <Typography id="response-modal-title" variant="h6" component="h2">
-              Status
-            </Typography>
-            <IconButton onClick={handleResponseModalClose}>
-              <X />
-            </IconButton>
-          </Box>
-
-          {apiError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {apiError}
-            </Alert>
-          )}
-
-          {apiResponse && (
+        {!apiError && !apiResponse ? (
+          <Box sx={responseModalStyle}>Dialing...</Box>
+        ) : (
+          <Box sx={responseModalStyle}>
             <Box
-              sx={{
-                bgcolor: "#f5f5f5",
-                p: 2,
-                borderRadius: 1,
-                fontFamily: "monospace",
-                whiteSpace: "pre-wrap",
-                overflowX: "auto",
-              }}
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              mb={2}
             >
-              <pre style={{ margin: 0 }}>
-                You will recive a call
-              </pre>
+              <Typography id="response-modal-title" variant="h6" component="h2">
+                Status
+              </Typography>
+              <IconButton onClick={handleResponseModalClose}>
+                <X />
+              </IconButton>
             </Box>
-          )}
-        </Box>}
+
+            {apiError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {apiError}
+              </Alert>
+            )}
+
+            {apiResponse && (
+              <Box
+                sx={{
+                  bgcolor: "#f5f5f5",
+                  p: 2,
+                  borderRadius: 1,
+                  fontFamily: "monospace",
+                  whiteSpace: "pre-wrap",
+                  overflowX: "auto",
+                }}
+              >
+                <pre style={{ margin: 0 }}>You will receive a call</pre>
+              </Box>
+            )}
+          </Box>
+        )}
       </Modal>
     </Box>
   );

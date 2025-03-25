@@ -1,10 +1,26 @@
 import React, { useState } from "react";
-import { Box, Paper, Tab, Tabs } from "@mui/material";
-import { AddressBook, ClockCounterClockwise } from "@phosphor-icons/react";
+import {
+  Box,
+  Fab,
+  Paper,
+  Tab,
+  Tabs,
+  Typography,
+  Menu,
+  MenuItem,
+  Tooltip,
+  IconButton,
+} from "@mui/material";
+import {
+  AddressBook,
+  ClockCounterClockwise,
+  Phone,
+  DotsThreeVertical,
+} from "@phosphor-icons/react";
 import Dialer from "./components/Dialer";
 import RecentCalls from "./components/RecentCalls";
 import Contacts from "./components/Contacts";
-// import { callPartyStore } from "./zustand/callPartyStore";
+import { useAuthStore } from "./zustand/authStore";
 
 interface Call {
   id: number;
@@ -14,18 +30,10 @@ interface Call {
   timestamp: number;
 }
 
-// interface Contact {
-//   id: number;
-//   name: string;
-//   number: string;
-//   status?: "Outgoing" | "Missed" | "Not Picked";
-//   timestamp?: Date | number;
-// }
-
 const Page: React.FC = () => {
-  // const { apartyno } = callPartyStore();
   const [tabValue, setTabValue] = useState(0);
   const [showDialer, setShowDialer] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [recentCalls, setRecentCalls] = useState([
     {
       id: 1,
@@ -60,6 +68,8 @@ const Page: React.FC = () => {
     { id: 8, name: "Joyel", number: "7994095038" },
   ];
 
+  const { logout, isAuthenticated } = useAuthStore();
+
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
     setShowDialer(false);
@@ -80,21 +90,25 @@ const Page: React.FC = () => {
   };
 
   const handleCloseDialer = () => {
-    setShowDialer(false)
-  }
+    setShowDialer(false);
+  };
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    handleMenuClose();
+  };
 
   return (
     <Box sx={{ height: "100dvh", display: "flex", flexDirection: "column" }}>
       <Box sx={{ flexGrow: 1, position: "relative", bgcolor: "white" }}>
-        {/* <Grid
-          item
-          xs={0}
-          md={6}
-          lg={5}
-          sx={{ display: { xs: "none", md: "block" } }}
-        >
-          <Dialer onDial={handleDial} onClose={() => setShowDialer(false)} />
-        </Grid> */}
         <Box
           sx={{ display: "flex", flexDirection: "column" }}
           height={"100dvh"}
@@ -163,6 +177,53 @@ const Page: React.FC = () => {
         >
           <Dialer onDial={handleDial} onClose={handleCloseDialer} />
         </Box>
+        <Fab
+          color="primary"
+          onClick={() => setShowDialer(true)}
+          sx={{
+            position: "absolute",
+            bottom: 80,
+            right: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            display: showDialer ? "none" : "block",
+          }}
+        >
+          <Phone color="white" style={{ marginTop: "6px" }} size={18} />
+        </Fab>
+
+        {isAuthenticated && (
+          <Box
+            sx={{
+              position: "absolute",
+              bottom: 16,
+              right: 2,
+            }}
+          >
+            <Tooltip title="Options" arrow>
+              <IconButton onClick={handleMenuOpen}>
+                <DotsThreeVertical size={24} />
+              </IconButton>
+            </Tooltip>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+              anchorOrigin={{
+                vertical: "top",
+                horizontal: "left",
+              }}
+              transformOrigin={{
+                vertical: "bottom",
+                horizontal: "right",
+              }}
+            >
+              <MenuItem onClick={handleLogout}>
+                <Typography variant="body2">Logout</Typography>
+              </MenuItem>
+            </Menu>
+          </Box>
+        )}
       </Box>
     </Box>
   );

@@ -13,7 +13,6 @@ import {
   InputBase,
   Paper,
   Button,
-  Fab,
 } from "@mui/material";
 import { MagnifyingGlass, Phone } from "@phosphor-icons/react";
 import { callPartyStore } from "../zustand/callPartyStore";
@@ -32,49 +31,39 @@ interface ContactsProps {
   dialerStatus: boolean;
 }
 
-const Contacts: React.FC<ContactsProps> = ({
-  onDialClick,
-  dialerStatus,
-}) => {
-
+const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
   const { setBpartyNo, apartyno, bpartyno } = callPartyStore();
-  const { user, token } = useAuthStore()
-  const [addContactOpen, setaddContactOpen] = useState<boolean>(false)
+  const { user, token } = useAuthStore();
+  const [addContactOpen, setaddContactOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [contactList, setContactList] = useState<Contact[]>([])
+  const [contactList, setContactList] = useState<Contact[]>([]);
 
-  const fetchContactList = async () => {
+  const fetchContactList = React.useCallback(async () => {
     try {
-      const res = await axios.post("https://phpstack-1431591-5347985.cloudwaysapps.com/api/contact-list",
+      const res = await axios.post(
+        "https://phpstack-1431591-5347985.cloudwaysapps.com/api/contact-list",
         { user_id: user?.user_id },
         {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (res.data.success) {
-        setContactList(res.data.contact_data)
+        setContactList(res.data.contact_data);
       }
       console.log(res);
-
     } catch (err) {
       console.log(err);
-
     }
-  }
+  }, [user?.user_id, token]);
+
   useEffect(() => {
     if (!addContactOpen && !dialerStatus) {
-      fetchContactList()
+      fetchContactList();
     }
-  }, [addContactOpen, dialerStatus])
-
-
-  useEffect(() => {
-    fetchContactList()
-  }, [])
-
-
+  }, [addContactOpen, dialerStatus, fetchContactList]);
 
   const filteredContacts = contactList.filter(
     (contact) =>
@@ -105,15 +94,13 @@ const Contacts: React.FC<ContactsProps> = ({
 
   const handleCall = (contact: Contact) => {
     console.log(contact);
-    onDialClick()
-    setBpartyNo(contact.phone)
-  }
-
+    onDialClick();
+    setBpartyNo(contact.phone);
+  };
 
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: "20px" }}>
-
         <Paper
           elevation={0}
           sx={{
@@ -123,7 +110,7 @@ const Contacts: React.FC<ContactsProps> = ({
             border: "1px solid",
             borderColor: "divider",
             borderRadius: "20px",
-            flex: "1"
+            flex: "1",
           }}
         >
           <MagnifyingGlass
@@ -137,8 +124,16 @@ const Contacts: React.FC<ContactsProps> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </Paper>
-        <Button variant="contained" sx={{ color: "white" }} onClick={() => setaddContactOpen(true)}>Add </Button>
-        <Button variant="contained" sx={{ color: "white" }}>Import </Button>
+        <Button
+          variant="contained"
+          sx={{ color: "white" }}
+          onClick={() => setaddContactOpen(true)}
+        >
+          Add{" "}
+        </Button>
+        <Button variant="contained" sx={{ color: "white" }}>
+          Import{" "}
+        </Button>
       </Box>
 
       <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
@@ -210,7 +205,11 @@ const Contacts: React.FC<ContactsProps> = ({
                             secondary={contact.phone}
                           />
                           <ListItemSecondaryAction>
-                            <IconButton edge="end" onClick={() => handleCall(contact)} color="primary">
+                            <IconButton
+                              edge="end"
+                              onClick={() => handleCall(contact)}
+                              color="primary"
+                            >
                               <Phone />
                             </IconButton>
                           </ListItemSecondaryAction>
@@ -226,21 +225,11 @@ const Contacts: React.FC<ContactsProps> = ({
             ))
         )}
       </Box>
-      <Fab
-        color="primary"
-        onClick={onDialClick}
-        sx={{
-          position: "absolute",
-          bottom: 73,
-          right: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          display: dialerStatus ? "none" : "block",
-        }}
-      >
-        <Phone color="white" style={{ marginTop: "6px" }} size={18} />
-      </Fab>
-      <AddContactModal open={addContactOpen} handleClose={handleCloseAddContact} />
+
+      <AddContactModal
+        open={addContactOpen}
+        handleClose={handleCloseAddContact}
+      />
     </Box>
   );
 };

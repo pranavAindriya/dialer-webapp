@@ -16,6 +16,7 @@ import {
   Alert,
   CircularProgress,
   Tooltip,
+  Collapse,
 } from "@mui/material";
 import { Backspace, CaretDown, Phone, X } from "@phosphor-icons/react";
 import { useAuthStore } from "../zustand/authStore";
@@ -67,6 +68,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
   const [apiResponse, setApiResponse] = useState<ApiResponse | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [responseModalOpen, setResponseModalOpen] = useState(false);
+  const [desktopAlertOpen, setDesktopAlertOpen] = useState(false);
 
   // Get auth state from zustand
   const { isAuthenticated, token } = useAuthStore();
@@ -128,6 +130,24 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
       return;
     }
 
+    if (bpartyno && bpartyno.toString().length < 10) {
+      return;
+    }
+
+    if (bpartyno && bpartyno.toString() === "1600180068") {
+      if (
+        navigator.userAgent.match(/Android/i) ||
+        navigator.userAgent.match(/iPhone/i) ||
+        navigator.userAgent.match(/webOS/i) ||
+        navigator.userAgent.match(/BlackBerry/i)
+      ) {
+        window.location.href = `tel:${bpartyno}`;
+      } else {
+        setDesktopAlertOpen(true);
+      }
+      return;
+    }
+
     if (apartyno && bpartyno) {
       handleInitiateCall();
     } else if (bpartyno && bpartyno.toString().length > 0) {
@@ -181,6 +201,14 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
   };
 
   useEffect(() => {
+    if (desktopAlertOpen) {
+      setTimeout(() => {
+        setDesktopAlertOpen(false);
+      }, 3000);
+    }
+  }, [desktopAlertOpen]);
+
+  useEffect(() => {
     if (isAuthenticated && open) {
       handleClose();
     }
@@ -219,6 +247,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
         bgcolor: "background.paper",
         border: !isMobile ? `1px solid ${theme.palette.divider}` : "none",
         outline: "none",
+        position: "relative",
       }}
       tabIndex={0}
       onKeyDown={handleKeyboardInput}
@@ -237,6 +266,15 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
         </IconButton>
       </Box>
 
+      <Collapse in={desktopAlertOpen} sx={{ marginInline: "auto" }}>
+        <Alert
+          severity="info"
+          onClose={() => setDesktopAlertOpen(false)}
+          sx={{ py: 2, borderRadius: "10px" }}
+        >
+          This device does not support direct phone dialing.
+        </Alert>
+      </Collapse>
       <Box
         sx={{
           display: "flex",
@@ -246,6 +284,8 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
           position: "relative",
           minHeight: "80px",
           flexDirection: "column",
+          mt: desktopAlertOpen ? 0 : 3,
+          transition: "all .5s",
         }}
       >
         <Typography variant="h4" sx={{ fontWeight: "medium" }}>

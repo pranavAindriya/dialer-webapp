@@ -190,11 +190,13 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
       const response = await axios.post("api/initiate-call", payload, config);
 
       setApiResponse(response.data);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Error initiating call:", err);
-      setApiError(
-        err instanceof Error ? err.message : "Unknown error occurred"
-      );
+      if (axios.isAxiosError(err) && err.response?.status !== 504) {
+        setApiError(
+          err instanceof Error ? err.message : "Unknown error occurred"
+        );
+      }
     } finally {
       setIsCallLoading(false);
     }

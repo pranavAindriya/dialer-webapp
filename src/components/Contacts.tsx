@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Box,
   List,
@@ -13,15 +13,16 @@ import {
   InputBase,
   Paper,
   Button,
+  Snackbar,
+  Alert,
 } from "@mui/material";
-import { MagnifyingGlass, Phone } from "@phosphor-icons/react";
+import { MagnifyingGlass, Phone, Upload } from "@phosphor-icons/react";
 import { callPartyStore } from "../zustand/callPartyStore";
 import { useAuthStore } from "../zustand/authStore";
 import axios from "axios";
 import AddContactModal from "../Modals/AddCondactModal/AddCondactModal";
 
 interface Contact {
-  // id: number;
   name: string;
   phone: string;
 }
@@ -37,6 +38,10 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
   const [addContactOpen, setaddContactOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [contactList, setContactList] = useState<Contact[]>([]);
+  const [openSuccessToast, setOpenSuccessToast] = useState(false);
+  const [openErrorToast, setOpenErrorToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchContactList = React.useCallback(async () => {
     try {
@@ -65,6 +70,71 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
     }
   }, [addContactOpen, dialerStatus, fetchContactList]);
 
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleCloseSuccessToast = (
+    _event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSuccessToast(false);
+  };
+
+  const handleCloseErrorToast = (
+    _event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenErrorToast(false);
+  };
+
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("user_id", user?.user_id?.toString() || "");
+    formData.append("contacts", file);
+
+    try {
+      const response = await axios.post(
+        "https://phpstack-1431591-5347985.cloudwaysapps.com/api/bulk-import/contact-list",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        fetchContactList();
+        setToastMessage("Contacts imported successfully");
+        setOpenSuccessToast(true);
+      } else {
+        setToastMessage(response.data.message || "Failed to import contacts");
+        setOpenErrorToast(true);
+      }
+    } catch (error) {
+      console.error("Error importing contacts:", error);
+      setToastMessage("Error importing contacts. Please try again.");
+      setOpenErrorToast(true);
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const filteredContacts = contactList.filter(
     (contact) =>
       contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -83,7 +153,6 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
 
   const contactGroups = groupByFirstLetter();
 
-  // Function to check if contact is selected as A-party or B-party
   const getContactRole = (contactNumber: string) => {
     if (contactNumber === apartyno) return "A-party";
     if (contactNumber === bpartyno) return "B-party";
@@ -100,6 +169,36 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
 
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <Snackbar
+        open={openSuccessToast}
+        autoHideDuration={6000}
+        onClose={handleCloseSuccessToast}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseSuccessToast}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          {toastMessage}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={openErrorToast}
+        autoHideDuration={6000}
+        onClose={handleCloseErrorToast}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseErrorToast}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {toastMessage}
+        </Alert>
+      </Snackbar>
+
       <Box sx={{ display: "flex", alignItems: "center", gap: "20px" }}>
         <Paper
           elevation={0}
@@ -131,9 +230,22 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
         >
           Add{" "}
         </Button>
-        <Button variant="contained" sx={{ color: "white" }}>
+        <Button
+          variant="contained"
+          sx={{ color: "white" }}
+          onClick={handleImportClick}
+          startIcon={<Upload />}
+        >
           Import{" "}
         </Button>
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          accept=".xlsx, .xls, .csv"
+          onChange={handleFileUpload}
+        />
       </Box>
 
       <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
@@ -183,23 +295,6 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
                             primary={
                               <Box display="flex" alignItems="center" gap={1}>
                                 <Typography>{contact.name}</Typography>
-                                {/* {contactRole && (
-                                  <Chip
-                                    label={contactRole}
-                                    size="small"
-                                    color={
-                                      contactRole === "A-party"
-                                        ? "primary"
-                                        : "info"
-                                    }
-                                    sx={{
-                                      height: 18,
-                                      color: "white",
-                                      fontSize: 10,
-                                      paddingTop: "2px",
-                                    }}
-                                  />
-                                )} */}
                               </Box>
                             }
                             secondary={contact.phone}

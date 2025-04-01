@@ -15,8 +15,23 @@ import {
   Button,
   Snackbar,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Menu,
+  MenuItem,
+  useTheme,
 } from "@mui/material";
-import { MagnifyingGlass, Phone, Upload } from "@phosphor-icons/react";
+import {
+  MagnifyingGlass,
+  Phone,
+  Upload,
+  PencilSimple,
+  Trash,
+  DotsThreeVertical,
+} from "@phosphor-icons/react";
 import { callPartyStore } from "../zustand/callPartyStore";
 import { useAuthStore } from "../zustand/authStore";
 import axios from "axios";
@@ -25,6 +40,7 @@ import AddContactModal from "../Modals/AddCondactModal/AddCondactModal";
 interface Contact {
   name: string;
   phone: string;
+  contact_id?: number; // Added contact_id for identifying contacts during edit/delete
 }
 
 interface ContactsProps {
@@ -42,6 +58,25 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
   const [openErrorToast, setOpenErrorToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const theme = useTheme();
+
+  // New state for edit functionality
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editContact, setEditContact] = useState<Contact | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+
+  // New state for delete confirmation
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
+
+  // State for context menu
+  const [contextMenu, setContextMenu] = useState<{
+    mouseX: number;
+    mouseY: number;
+    contact: Contact;
+  } | null>(null);
 
   const fetchContactList = React.useCallback(async () => {
     try {
@@ -133,6 +168,121 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  // Handle opening the context menu
+  const handleContextMenu = (event: React.MouseEvent, contact: Contact) => {
+    event.preventDefault();
+    setContextMenu({
+      mouseX: event.clientX - 2,
+      mouseY: event.clientY - 4,
+      contact,
+    });
+  };
+
+  // Handle closing the context menu
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
+
+  // Function to open edit dialog
+  const handleEditClick = (contact: Contact) => {
+    setEditContact(contact);
+    setEditName(contact.name);
+    setEditPhone(contact.phone);
+    setEditDialogOpen(true);
+    handleCloseContextMenu();
+  };
+
+  // Function to handle edit dialog close
+  const handleEditDialogClose = () => {
+    setEditDialogOpen(false);
+    setEditContact(null);
+  };
+
+  // Function to save edited contact
+  const handleSaveEdit = async () => {
+    if (!editContact || !user?.user_id) return;
+
+    try {
+      const response = await axios.post(
+        "https://phpstack-1431591-5347985.cloudwaysapps.com/api/update-contact",
+        {
+          user_id: user.user_id,
+          contact_id: editContact.contact_id,
+          name: editName,
+          phone: editPhone,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        fetchContactList();
+        setToastMessage("Contact updated successfully");
+        setOpenSuccessToast(true);
+      } else {
+        setToastMessage(response.data.message || "Failed to update contact");
+        setOpenErrorToast(true);
+      }
+    } catch (error) {
+      console.error("Error updating contact:", error);
+      setToastMessage("Error updating contact. Please try again.");
+      setOpenErrorToast(true);
+    }
+
+    handleEditDialogClose();
+  };
+
+  // Function to open delete confirmation dialog
+  const handleDeleteClick = (contact: Contact) => {
+    setContactToDelete(contact);
+    setDeleteDialogOpen(true);
+    handleCloseContextMenu();
+  };
+
+  // Function to handle delete dialog close
+  const handleDeleteDialogClose = () => {
+    setDeleteDialogOpen(false);
+    setContactToDelete(null);
+  };
+
+  // Function to confirm contact deletion
+  const handleConfirmDelete = async () => {
+    if (!contactToDelete || !user?.user_id) return;
+
+    try {
+      const response = await axios.post(
+        "https://phpstack-1431591-5347985.cloudwaysapps.com/api/delete-contact",
+        {
+          user_id: user.user_id,
+          contact_id: contactToDelete.contact_id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        fetchContactList();
+        setToastMessage("Contact deleted successfully");
+        setOpenSuccessToast(true);
+      } else {
+        setToastMessage(response.data.message || "Failed to delete contact");
+        setOpenErrorToast(true);
+      }
+    } catch (error) {
+      console.error("Error deleting contact:", error);
+      setToastMessage("Error deleting contact. Please try again.");
+      setOpenErrorToast(true);
+    }
+
+    handleDeleteDialogClose();
   };
 
   const filteredContacts = contactList.filter(
@@ -278,6 +428,7 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
                               ? "action.hover"
                               : "transparent",
                           }}
+                          onContextMenu={(e) => handleContextMenu(e, contact)}
                         >
                           <ListItemAvatar>
                             <Avatar
@@ -307,6 +458,20 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
                             >
                               <Phone />
                             </IconButton>
+                            <IconButton
+                              edge="end"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                setContextMenu({
+                                  mouseX: e.clientX - 2,
+                                  mouseY: e.clientY - 4,
+                                  contact,
+                                });
+                              }}
+                            >
+                              <DotsThreeVertical />
+                            </IconButton>
                           </ListItemSecondaryAction>
                         </ListItem>
                         {index < group.length - 1 && (
@@ -320,6 +485,129 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
             ))
         )}
       </Box>
+
+      {/* Context Menu */}
+      <Menu
+        open={contextMenu !== null}
+        onClose={handleCloseContextMenu}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          contextMenu !== null
+            ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+            : undefined
+        }
+      >
+        <MenuItem
+          onClick={() => contextMenu && handleEditClick(contextMenu.contact)}
+        >
+          <PencilSimple
+            size={18}
+            style={{ marginRight: "8px" }}
+            color={theme.palette.info.main}
+          />
+          Edit
+        </MenuItem>
+        <MenuItem
+          onClick={() => contextMenu && handleDeleteClick(contextMenu.contact)}
+        >
+          <Trash
+            size={18}
+            style={{ marginRight: "8px" }}
+            color={theme.palette.error.main}
+          />
+          Delete
+        </MenuItem>
+      </Menu>
+
+      {/* Edit Contact Dialog */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={handleEditDialogClose}
+        maxWidth="xs"
+        fullWidth
+        slotProps={{
+          paper: {
+            sx: {
+              px: 1,
+              py: 2,
+              borderRadius: 5,
+            },
+          },
+        }}
+      >
+        <DialogTitle>Edit Contact</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Name"
+              fullWidth
+              variant="outlined"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+            />
+            <TextField
+              margin="dense"
+              label="Phone Number"
+              fullWidth
+              variant="outlined"
+              value={editPhone}
+              onChange={(e) => setEditPhone(e.target.value)}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleEditDialogClose} variant="outlined">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSaveEdit}
+            variant="contained"
+            color="primary"
+            sx={{ color: "white" }}
+          >
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteDialogClose}
+        maxWidth="xs"
+        fullWidth
+        slotProps={{
+          paper: {
+            sx: {
+              px: 1,
+              py: 2,
+              borderRadius: 5,
+            },
+          },
+        }}
+      >
+        <DialogTitle>Delete Contact</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete {contactToDelete?.name}? This action
+            cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteDialogClose} variant="outlined">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <AddContactModal
         open={addContactOpen}

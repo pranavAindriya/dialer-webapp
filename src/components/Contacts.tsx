@@ -31,6 +31,7 @@ import {
   PencilSimple,
   Trash,
   DotsThreeVertical,
+  Download,
 } from "@phosphor-icons/react";
 import { callPartyStore } from "../zustand/callPartyStore";
 import { useAuthStore } from "../zustand/authStore";
@@ -317,6 +318,26 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
     setBpartyNo(contact.phone);
   };
 
+  const downloadCSVSample = () => {
+    const link = document.createElement("a");
+    link.href =
+      "https://drive.google.com/uc?export=download&id=1OGIIW3UmuRnmPold2myJz8Q_wgUfzUcy";
+    link.setAttribute("download", "contacts_sample.csv");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
+  const downloadExcelSample = () => {
+    const link = document.createElement("a");
+    link.href =
+      "https://drive.google.com/uc?export=download&id=1TNF_wxdX0vauXhy74__OZF6MUZdb072T";
+    link.setAttribute("download", "contacts_sample.xlsx");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Snackbar
@@ -349,7 +370,14 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
         </Alert>
       </Snackbar>
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: "20px" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: "20px",
+          flexWrap: "wrap",
+        }}
+      >
         <Paper
           elevation={0}
           sx={{
@@ -359,7 +387,7 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
             border: "1px solid",
             borderColor: "divider",
             borderRadius: "20px",
-            flex: "1",
+            flexGrow: "1",
           }}
         >
           <MagnifyingGlass
@@ -373,21 +401,49 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </Paper>
-        <Button
-          variant="contained"
-          sx={{ color: "white" }}
-          onClick={() => setaddContactOpen(true)}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: "20px",
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
         >
-          Add{" "}
-        </Button>
-        <Button
-          variant="contained"
-          sx={{ color: "white" }}
-          onClick={handleImportClick}
-          startIcon={<Upload />}
-        >
-          Import{" "}
-        </Button>
+          <Button
+            variant="contained"
+            sx={{ color: "white", borderRadius: "20px" }}
+            onClick={() => setaddContactOpen(true)}
+          >
+            Add{" "}
+          </Button>
+          <Button
+            variant="contained"
+            sx={{ color: "white", borderRadius: "20px" }}
+            onClick={handleImportClick}
+            startIcon={<Upload />}
+          >
+            Import{" "}
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={downloadCSVSample}
+            startIcon={<Download />}
+            sx={{ minWidth: "auto", borderRadius: "20px" }}
+            title="Download CSV Sample"
+          >
+            CSV
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={downloadExcelSample}
+            startIcon={<Download />}
+            sx={{ minWidth: "auto", borderRadius: "20px" }}
+            title="Download Excel Sample"
+          >
+            Excel
+          </Button>
+        </Box>
 
         <input
           type="file"

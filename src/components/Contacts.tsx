@@ -41,7 +41,7 @@ import AddContactModal from "../Modals/AddCondactModal/AddCondactModal";
 interface Contact {
   name: string;
   phone: string;
-  contact_id?: number; // Added contact_id for identifying contacts during edit/delete
+  id?: number; // Added contact_id for identifying contacts during edit/delete
 }
 
 interface ContactsProps {
@@ -210,7 +210,7 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
         "https://phpstack-1431591-5347985.cloudwaysapps.com/api/update-contact",
         {
           user_id: user.user_id,
-          contact_id: editContact.contact_id,
+          contact_id: editContact.id,
           name: editName,
           phone: editPhone,
         },
@@ -260,7 +260,7 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
         "https://phpstack-1431591-5347985.cloudwaysapps.com/api/delete-contact",
         {
           user_id: user.user_id,
-          contact_id: contactToDelete.contact_id,
+          contact_id: contactToDelete.id,
         },
         {
           headers: {

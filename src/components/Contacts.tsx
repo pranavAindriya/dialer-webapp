@@ -328,15 +328,15 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
     link.remove();
   };
 
-  const downloadExcelSample = () => {
-    const link = document.createElement("a");
-    link.href =
-      "https://drive.google.com/uc?export=download&id=1TNF_wxdX0vauXhy74__OZF6MUZdb072T";
-    link.setAttribute("download", "contacts_sample.xlsx");
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  };
+  // const downloadExcelSample = () => {
+  //   const link = document.createElement("a");
+  //   link.href =
+  //     "https://drive.google.com/uc?export=download&id=1TNF_wxdX0vauXhy74__OZF6MUZdb072T";
+  //   link.setAttribute("download", "contacts_sample.xlsx");
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   link.remove();
+  // };
 
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -432,9 +432,9 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
             sx={{ minWidth: "auto", borderRadius: "20px" }}
             title="Download CSV Sample"
           >
-            CSV
+            Download Sample CSV
           </Button>
-          <Button
+          {/* <Button
             variant="outlined"
             onClick={downloadExcelSample}
             startIcon={<Download />}
@@ -442,7 +442,7 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
             title="Download Excel Sample"
           >
             Excel
-          </Button>
+          </Button> */}
         </Box>
 
         <input

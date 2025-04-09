@@ -3,6 +3,7 @@ import React, {
   useState,
   KeyboardEvent,
   ClipboardEvent,
+  ChangeEvent,
 } from "react";
 import {
   Box,
@@ -17,6 +18,8 @@ import {
   CircularProgress,
   Tooltip,
   Collapse,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
 import { Backspace, CaretDown, Phone, X } from "@phosphor-icons/react";
 import { useAuthStore } from "../zustand/authStore";
@@ -59,20 +62,16 @@ interface ApiResponse {
 }
 
 const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
-  const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
-  // New states for API call and response modal
+  const [open, setOpen] = useState(false);
   const [isCallLoading, setIsCallLoading] = useState(false);
   const [apiResponse, setApiResponse] = useState<ApiResponse | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [responseModalOpen, setResponseModalOpen] = useState(false);
   const [desktopAlertOpen, setDesktopAlertOpen] = useState(false);
 
-  // Get auth state from zustand
   const { isAuthenticated, token } = useAuthStore();
-
   const {
     apartyno,
     bpartyno,
@@ -83,45 +82,38 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
     setBpartyNo,
   } = callPartyStore();
 
-  // Handle number click for dialer buttons
   const handleNumberClick = (num: string) => {
-    const prevValue = callPartyStore.getState().bpartyno || "";
-    if (prevValue.toString().length < 10) {
-      setBpartyNo(prevValue.toString() + num);
+    const prevValue = bpartyno?.toString() || "";
+    if (prevValue.length < 10) {
+      setBpartyNo(prevValue + num);
     }
   };
 
-  // Handle keyboard input
   const handleKeyboardInput = (e: KeyboardEvent<HTMLDivElement>) => {
     const key = e.key;
-
-    // Allow only numeric keys, backspace, and delete
     if (/^[0-9]$/.test(key)) {
-      const prevValue = callPartyStore.getState().bpartyno || "";
-      if (prevValue.toString().length < 10) {
-        setBpartyNo(prevValue.toString() + key);
-      }
+      handleNumberClick(key);
     } else if (key === "Backspace" || key === "Delete") {
       handleBackspace();
     }
   };
 
-  // Handle paste event with validation
-  const handlePaste = (e: ClipboardEvent<HTMLDivElement>) => {
-    e.preventDefault();
+  const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     const pastedText = e.clipboardData.getData("text");
-    const numericPaste = pastedText.replace(/\D/g, ""); // Remove non-numeric characters
+    const numericText = pastedText.replace(/\D/g, "");
+    const combined = (bpartyno || "") + numericText;
+    setBpartyNo(combined.slice(0, 10));
+  };
 
-    const prevValue = callPartyStore.getState().bpartyno || "";
-    const combinedValue = prevValue + numericPaste;
-    const finalValue = combinedValue.slice(0, 10); // Limit to 10 digits
-
-    setBpartyNo(finalValue);
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const input = e.target.value.replace(/\D/g, "");
+    setBpartyNo(input.slice(0, 10));
   };
 
   const handleBackspace = () => {
-    const prevValue = callPartyStore.getState().bpartyno || ""; // Get current value
-    setBpartyNo(prevValue.toString().slice(0, -1));
+    const current = bpartyno?.toString() || "";
+    setBpartyNo(current.slice(0, -1));
   };
 
   const handleDial = () => {
@@ -130,41 +122,27 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
       return;
     }
 
-    if (bpartyno && bpartyno.toString().length < 10) {
-      return;
-    }
+    const number = bpartyno?.toString() || "";
 
-    if (bpartyno && bpartyno.toString() === "1600180068") {
-      if (
-        navigator.userAgent.match(/Android/i) ||
-        navigator.userAgent.match(/iPhone/i) ||
-        navigator.userAgent.match(/webOS/i) ||
-        navigator.userAgent.match(/BlackBerry/i)
-      ) {
-        window.location.href = `tel:${bpartyno}`;
+    if (number.length < 10) return;
+
+    if (number === "1600180068") {
+      if (/Android|iPhone|webOS|BlackBerry/i.test(navigator.userAgent)) {
+        window.location.href = `tel:${number}`;
       } else {
         setDesktopAlertOpen(true);
       }
       return;
     }
 
-    if (apartyno && bpartyno) {
+    if (apartyno && number) {
       handleInitiateCall();
-    } else if (bpartyno && bpartyno.toString().length > 0) {
-      // Ensure bpartyno is not undefined
-      onDial(bpartyno.toString());
-      setBpartyNo(""); // Reset after dialing
+    } else {
+      onDial(number);
+      setBpartyNo("");
     }
   };
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
-
-  const handleResponseModalClose = () => {
-    setResponseModalOpen(false);
-  };
-
-  // Function to handle the call initiation
   const handleInitiateCall = async () => {
     setResponseModalOpen(true);
     try {
@@ -188,32 +166,31 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
       };
 
       const response = await axios.post("api/initiate-call", payload, config);
-
       setApiResponse(response.data);
     } catch (err: unknown) {
-      console.error("Error initiating call:", err);
       if (axios.isAxiosError(err) && err.response?.status !== 504) {
-        setApiError(
-          err instanceof Error ? err.message : "Unknown error occurred"
-        );
+        setApiError(err.message || "Unknown error occurred");
       }
     } finally {
       setIsCallLoading(false);
     }
   };
 
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+  const handleResponseModalClose = () => setResponseModalOpen(false);
+
   useEffect(() => {
     if (desktopAlertOpen) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setDesktopAlertOpen(false);
       }, 3000);
+      return () => clearTimeout(timer);
     }
   }, [desktopAlertOpen]);
 
   useEffect(() => {
-    if (isAuthenticated && open) {
-      handleClose();
-    }
+    if (isAuthenticated && open) handleClose();
   }, [isAuthenticated, open]);
 
   const dialButtons = [
@@ -253,7 +230,6 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
       }}
       tabIndex={0}
       onKeyDown={handleKeyboardInput}
-      onPaste={handlePaste}
     >
       <Box display={"flex"} alignItems={"center"}>
         <Typography
@@ -262,8 +238,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
         >
           Dialer
         </Typography>
-
-        <IconButton onClick={onClose} sx={{ alignSelf: "flex-end" }}>
+        <IconButton onClick={onClose}>
           <CaretDown />
         </IconButton>
       </Box>
@@ -277,33 +252,49 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
           This device does not support direct phone dialing.
         </Alert>
       </Collapse>
+
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           my: 3,
-          position: "relative",
-          minHeight: "80px",
           flexDirection: "column",
-          mt: desktopAlertOpen ? 0 : 3,
-          transition: "all .5s",
         }}
       >
-        <Typography variant="h4" sx={{ fontWeight: "medium" }}>
-          {bpartyno}
-        </Typography>
-        {bpartyno && bpartyno.toString().length > 0 && (
-          <IconButton
-            sx={{ position: "absolute", right: 0 }}
-            onClick={handleBackspace}
-          >
-            <Backspace />
-          </IconButton>
-        )}
+        <TextField
+          value={bpartyno || ""}
+          onChange={handleChange}
+          onPaste={handlePaste}
+          slotProps={{
+            htmlInput: {
+              style: {
+                fontSize: "2rem",
+                textAlign: "center",
+                width: "100%",
+                caretColor: theme.palette.text.primary,
+              },
+              maxLength: 10,
+              inputMode: "numeric",
+              pattern: "[0-9]*",
+            },
+          }}
+          variant="standard"
+          sx={{ width: "100%", maxWidth: 300 }}
+          InputProps={{
+            disableUnderline: true,
+            endAdornment: bpartyno && (
+              <InputAdornment position="end">
+                <IconButton onClick={handleBackspace}>
+                  <Backspace />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
       </Box>
 
-      <Grid container spacing={2} sx={{ flexGrow: 1 }}>
+      <Grid container spacing={2} sx={{ flexGrow: 1, mt: 3 }}>
         {dialButtons.map((row) =>
           row.map((num) => (
             <Grid item xs={4} key={num}>
@@ -328,7 +319,7 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
         )}
       </Grid>
 
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4, pb: 2 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
         <Tooltip title={apartyno && bpartyno ? "Initiate Call" : "Dial Number"}>
           <IconButton
             color="primary"
@@ -337,11 +328,13 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
               color: "white",
               p: 3,
               "&:hover": { bgcolor: "#388e3c" },
+              "&.Mui-disabled": {
+                bgcolor: "primary.light",
+                color: "whitesmoke",
+              },
             }}
             onClick={handleDial}
-            disableRipple={
-              isCallLoading || (!bpartyno && (!apartyno || !bpartyno))
-            }
+            disabled={isCallLoading || !bpartyno}
           >
             {isCallLoading ? (
               <CircularProgress size={20} color="inherit" />
@@ -357,46 +350,36 @@ const Dialer: React.FC<DialerProps> = ({ onDial, onClose }) => {
         onClose={handleResponseModalClose}
         aria-labelledby="response-modal-title"
       >
-        {!apiError && !apiResponse ? (
-          <Box sx={responseModalStyle}>Dialing...</Box>
-        ) : (
-          <Box sx={responseModalStyle}>
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              mb={2}
-            >
-              <Typography id="response-modal-title" variant="h6" component="h2">
-                Status
-              </Typography>
-              <IconButton onClick={handleResponseModalClose}>
-                <X />
-              </IconButton>
-            </Box>
-
-            {apiError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {apiError}
-              </Alert>
-            )}
-
-            {apiResponse && (
-              <Box
-                sx={{
-                  bgcolor: "#f5f5f5",
-                  p: 2,
-                  borderRadius: 1,
-                  fontFamily: "monospace",
-                  whiteSpace: "pre-wrap",
-                  overflowX: "auto",
-                }}
-              >
-                <pre style={{ margin: 0 }}>You will receive a call</pre>
-              </Box>
-            )}
+        <Box sx={responseModalStyle}>
+          <Box display="flex" justifyContent="space-between" mb={2}>
+            <Typography variant="h6">Status</Typography>
+            <IconButton onClick={handleResponseModalClose}>
+              <X />
+            </IconButton>
           </Box>
-        )}
+
+          {apiError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {apiError}
+            </Alert>
+          )}
+
+          {apiResponse && (
+            <Box
+              sx={{
+                bgcolor: "#f5f5f5",
+                p: 2,
+                borderRadius: 1,
+                fontFamily: "monospace",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              <pre style={{ margin: 0 }}>You will receive a call</pre>
+            </Box>
+          )}
+
+          {!apiError && !apiResponse && <Typography>Dialing...</Typography>}
+        </Box>
       </Modal>
     </Box>
   );

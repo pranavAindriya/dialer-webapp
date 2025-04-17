@@ -82,7 +82,7 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
   const fetchContactList = React.useCallback(async () => {
     try {
       const res = await axios.post(
-        "https://phpstack-1431591-5347985.cloudwaysapps.com/api/contact-list",
+        "https://phpstack-1447926-5428182.cloudwaysapps.com/api/contact-list",
         { user_id: user?.user_id },
         {
           headers: {
@@ -142,7 +142,7 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
 
     try {
       const response = await axios.post(
-        "https://phpstack-1431591-5347985.cloudwaysapps.com/api/bulk-import/contact-list",
+        "https://phpstack-1447926-5428182.cloudwaysapps.com/api/bulk-import/contact-list",
         formData,
         {
           headers: {
@@ -207,7 +207,7 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
 
     try {
       const response = await axios.post(
-        "https://phpstack-1431591-5347985.cloudwaysapps.com/api/update-contact",
+        "https://phpstack-1447926-5428182.cloudwaysapps.com/api/update-contact",
         {
           user_id: user.user_id,
           contact_id: editContact.id,
@@ -257,7 +257,7 @@ const Contacts: React.FC<ContactsProps> = ({ onDialClick, dialerStatus }) => {
 
     try {
       const response = await axios.post(
-        "https://phpstack-1431591-5347985.cloudwaysapps.com/api/delete-contact",
+        "https://phpstack-1447926-5428182.cloudwaysapps.com/api/delete-contact",
         {
           user_id: user.user_id,
           contact_id: contactToDelete.id,

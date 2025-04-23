@@ -40,7 +40,7 @@ const SignUpForm = ({ handleChangePage }: SignUpTypes) => {
     e.preventDefault();
     try {
       const res = await axios.post(
-        "https://phpstack-1447926-5428182.cloudwaysapps.com/api/create-user",
+        `${import.meta.env.VITE_BASE_URL}/api/create-user`,
         formValues
       );
       if (res.data.success) {

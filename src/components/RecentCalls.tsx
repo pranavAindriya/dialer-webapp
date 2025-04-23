@@ -78,7 +78,7 @@ const RecentCalls: React.FC<RecentCallsProps> = ({ dialerStatus }) => {
   const fetchRecentCalls = React.useCallback(async () => {
     try {
       const res = await axios.post(
-        "https://phpstack-1447926-5428182.cloudwaysapps.com/api/get/recents-calls",
+        `${import.meta.env.VITE_BASE_URL}/api/get/recents-calls`,
         { user_id: user?.user_id },
         {
           headers: {

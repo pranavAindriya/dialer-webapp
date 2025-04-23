@@ -38,7 +38,7 @@ const AddContactModal = ({ open, handleClose }: ContactAddModalTypes) => {
     e.preventDefault();
     try {
       const res = await axios.post(
-        "https://phpstack-1447926-5428182.cloudwaysapps.com/api/create-contact",
+        `${import.meta.env.VITE_BASE_URL}/api/create-contact`,
         { user_id: user?.user_id, name, phone },
         {
           headers: {

@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   try {
     // Get the API URL from environment variables
     const apiUrl =
-      "https://cts.myvi.in:8443/Cpaas/api/clicktocall/initiate-call";
+      "https://cts.myvi.in:8443/Cpaas/api/v1/clicktocall/initiate-call";
 
     // Extract request body
     let requestBody = req.body;
